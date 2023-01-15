@@ -1,15 +1,17 @@
 #![allow(unused)]
 #![allow(dead_code)]
 #![allow(unstable_features)]
+use crc32fast::hash;
 use serde::{Deserialize, Serialize};
 use std::{
     char,
-    collections::{HashMap, HashSet},
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
     fs,
-    hash::Hash,
+    hash::{Hash, Hasher},
     process::id,
     vec,
 };
+use web_scout::{Document, WebScout};
 // #[derive(PartialEq)]
 // struct IndexedChar {
 //     char: char,
@@ -22,22 +24,20 @@ use std::{
 //     chars: Vec<String>,
 // }
 
-// fn read_docs() -> Vec<Document> {
-//     let mut docs: Vec<Document> = vec![];
-//     let dir = fs::read_dir("data").unwrap();
-//     let mut count = 0;
-//     for entry in dir {
-//         let file = entry.unwrap();
-//         docs.push(Document {
-//             id: count,
-//             title: file.file_name().to_str().unwrap().to_owned(),
-//             content: fs::read_to_string(file.path()).unwrap(),
-//             chars: vec![],
-//         });
-//         count += 1;
-//     }
-//     return docs;
-// }
+fn read_docs() -> Vec<Document> {
+    let mut docs: Vec<Document> = vec![];
+    let dir = fs::read_dir("data").unwrap();
+    let mut count = 0;
+    for entry in dir {
+        let file = entry.unwrap();
+        docs.push(Document {
+            title: file.file_name().to_str().unwrap().to_owned(),
+            body: fs::read_to_string(file.path()).unwrap(),
+        });
+        count += 1;
+    }
+    return docs;
+}
 // fn parse_chars(document: &mut Document) {
 //     let mut keys = document.content.split_whitespace().into_iter();
 //     let words: Vec<String> = vec![];
@@ -147,4 +147,8 @@ fn main() {
     // idx.evaluate_result(&mut prs);
     // let json = serde_json::to_string_pretty(&idx).unwrap();
     // fs::write("index.json", &json);
+    // let ws = WebScout::new();
+    // ws.parse_body(&mut docs[0]);
+    let somestr = "hello there";
+    println!("{:?}", hash(&somestr.as_bytes()));
 }
