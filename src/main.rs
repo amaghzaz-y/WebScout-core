@@ -120,8 +120,14 @@ fn read_docs() -> Vec<Document> {
 fn main() {
     let mut docs = read_docs();
     let mut ws = WebScout::new();
-    let mut tokens = ws.parse_body(&docs[0]);
-    ws.add_document(&docs[0]);
-    ws.index_tokens(&tokens, &docs[0]);
-    println!("{:?}", ws);
+
+    for doc in docs {
+        let mut tokens = ws.parse_body(&doc);
+        ws.add_document(&doc);
+        ws.index_tokens(&tokens, &doc);
+    }
+    let bin = bincode::serialize(&ws).unwrap();
+    let yaml = serde_yaml::to_string(&ws).unwrap();
+    fs::write("ws.bin", bin);
+    fs::write("ws.yml", yaml);
 }

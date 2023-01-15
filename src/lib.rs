@@ -2,6 +2,8 @@
 #![allow(dead_code)]
 #![allow(unstable_features)]
 use crc32fast::hash;
+use serde::__private::doc;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{
         hash_map::{self, DefaultHasher},
@@ -11,38 +13,38 @@ use std::{
     ops::Add,
     str, vec,
 };
-
-use serde::__private::doc;
-
+#[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 pub struct Document {
     pub title: String,
     pub body: String,
 }
-#[derive(PartialEq, Eq, Debug, Hash)]
+#[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 
 struct Token {
     value: String,
 }
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 
 struct Index {
     freq: u32,
     spots: HashMap<u32, u32>, // 1st value: document id, 2nd value: freq
 }
-#[derive(PartialEq, Eq, Debug)]
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 
 struct Store {
     docs_keys: HashSet<u32>,
     dict: HashMap<Token, Index>,
 }
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct WebScout {
+    title: &'static str,
     documents: HashMap<String, u32>, // 1st value: document name, 2nd value: document id
     store: Store,
 }
 impl WebScout {
     pub fn new() -> Self {
         WebScout {
+            title: "WebScout LLC",
             documents: HashMap::new(),
             store: Store {
                 docs_keys: HashSet::new(),
