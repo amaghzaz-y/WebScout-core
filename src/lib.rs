@@ -3,7 +3,10 @@
 #![allow(unstable_features)]
 use crc32fast::hash;
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap, HashSet},
+    collections::{
+        hash_map::{self, DefaultHasher},
+        HashMap, HashSet,
+    },
     hash::Hash,
     ops::Add,
     str, vec,
@@ -15,17 +18,24 @@ pub struct Document {
     pub title: String,
     pub body: String,
 }
+#[derive(PartialEq, Eq, Debug, Hash)]
+
 struct Token {
     value: String,
 }
+#[derive(PartialEq, Eq, Debug)]
+
 struct Index {
     freq: u32,
     spots: HashMap<u32, u32>, // 1st value: document id, 2nd value: freq
 }
+#[derive(PartialEq, Eq, Debug)]
+
 struct Store {
     docs_keys: HashSet<u32>,
     dict: HashMap<Token, Index>,
 }
+#[derive(Debug)]
 pub struct WebScout {
     documents: HashMap<String, u32>, // 1st value: document name, 2nd value: document id
     store: Store,
@@ -40,7 +50,7 @@ impl WebScout {
             },
         }
     }
-    pub fn parse_body(&self, document: &mut Document) -> HashMap<String, u32> {
+    pub fn parse_body(&self, document: &Document) -> HashMap<String, u32> {
         let mut tokens: HashMap<String, u32> = HashMap::default();
         let bin_body = document.body.as_bytes().to_owned();
         let mut words: Vec<String> = vec![];
@@ -63,7 +73,46 @@ impl WebScout {
         }
         return tokens;
     }
-    fn add_document(&mut self, document: &mut Document) {
+    pub fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
+        for token in tokens {
+            let mut dict = &mut self.store.dict;
+            if dict.contains_key(&Token {
+                value: token.0.to_string(),
+            }) {
+                dict.entry(Token {
+                    value: token.0.to_string(),
+                })
+                .and_modify(|f| {
+                    f.spots
+                        .insert(hash(document.title.as_bytes()), token.1.to_owned());
+                });
+            } else {
+                dict.insert(
+                    Token {
+                        value: token.0.to_string(),
+                    },
+                    Index {
+                        freq: token.1.to_owned(),
+                        spots: HashMap::from([(
+                            hash(document.title.as_bytes()),
+                            token.1.to_owned(),
+                        )]),
+                    },
+                );
+            }
+            dict.entry(Token {
+                value: token.0.to_string(),
+            })
+            .and_modify(|f| {
+                let mut freq = 0;
+                for key in f.spots.clone() {
+                    freq += key.1;
+                }
+                f.freq = freq;
+            });
+        }
+    }
+    pub fn add_document(&mut self, document: &Document) {
         self.documents
             .insert(document.title.to_owned(), hash(document.title.as_bytes()));
     }

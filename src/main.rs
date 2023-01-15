@@ -2,7 +2,7 @@
 #![allow(dead_code)]
 #![allow(unstable_features)]
 use crc32fast::hash;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, __private::doc};
 use std::{
     char,
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
@@ -12,18 +12,6 @@ use std::{
     vec,
 };
 use web_scout::{Document, WebScout};
-// #[derive(PartialEq)]
-// struct IndexedChar {
-//     char: char,
-//     docs: Vec<i32>,
-// }
-// struct Document {
-//     id: i32,
-//     title: String,
-//     content: String,
-//     chars: Vec<String>,
-// }
-
 fn read_docs() -> Vec<Document> {
     let mut docs: Vec<Document> = vec![];
     let dir = fs::read_dir("data").unwrap();
@@ -130,25 +118,10 @@ fn read_docs() -> Vec<Document> {
 //     }
 // }
 fn main() {
-    // let mut idx = Index {
-    //     chars: HashMap::default(),
-    //     docs: vec![],
-    //     table: HashMap::default(),
-    // };
-    // let mut docs = read_docs();
-    // for mut doc in docs {
-    //     parse_chars(&mut doc);
-    //     idx.add_document(&mut doc);
-    // }
-    // let mut rs = idx.raw_search("My name is john");
-    // println!("raw search {:?}", rs);
-    // let mut prs = idx.group_raw_search(&mut rs);
-    // println!("raw search grouped : {:?}", prs);
-    // idx.evaluate_result(&mut prs);
-    // let json = serde_json::to_string_pretty(&idx).unwrap();
-    // fs::write("index.json", &json);
-    // let ws = WebScout::new();
-    // ws.parse_body(&mut docs[0]);
-    let somestr = "hello there";
-    println!("{:?}", hash(&somestr.as_bytes()));
+    let mut docs = read_docs();
+    let mut ws = WebScout::new();
+    let mut tokens = ws.parse_body(&docs[0]);
+    ws.add_document(&docs[0]);
+    ws.index_tokens(&tokens, &docs[0]);
+    println!("{:?}", ws);
 }
