@@ -1,0 +1,113 @@
+// Test 1
+Document len : 6065
+Parsing: 1984
+Adding Document: 9
+Indexing Document: 1265
+
+Document len : 6105
+Parsing: 2043
+Adding Document: 3
+Indexing Document: 476
+
+Document len : 94275
+Parsing: 27862
+Adding Document: 5
+Indexing Document: 15857
+
+Document len : 20839
+Parsing: 6023
+Adding Document: 15
+Indexing Document: 10112
+
+Document len : 40995
+Parsing: 17820
+Adding Document: 12
+Indexing Document: 7276
+
+Document len : 29231
+Parsing: 8959
+Adding Document: 6
+Indexing Document: 4260
+
+Document len : 30964
+Parsing: 9319
+Adding Document: 5
+Indexing Document: 6065
+
+Document len : 3578
+Parsing: 1801
+Adding Document: 13
+Indexing Document: 1579
+
+Document len : 1987
+Parsing: 1198
+Adding Document: 3
+Indexing Document: 943
+
+Document len : 101404
+Parsing: 29615
+Adding Document: 5
+Indexing Document: 11377
+
+Document len : 4815
+Parsing: 1226
+Adding Document: 3
+Indexing Document: 7221
+
+Document len : 229320
+Parsing: 68454
+Adding Document: 6
+Indexing Document: 22525
+
+Document len : 33985
+Parsing: 11459
+Adding Document: 12
+Indexing Document: 6369
+
+Document len : 8457
+Parsing: 2314
+Adding Document: 2
+Indexing Document: 1897
+
+Document len : 2433
+Parsing: 894
+Adding Document: 16
+Indexing Document: 868
+
+Document len : 15702
+Parsing: 6220
+Adding Document: 6
+Indexing Document: 4259
+
+Document len : 4351
+Parsing: 2191
+Adding Document: 3
+Indexing Document: 1381
+
+Document len : 36368
+Parsing: 11777
+Adding Document: 9
+Indexing Document: 7945
+
+Document len : 40792
+Parsing: 14505
+Adding Document: 4
+Indexing Document: 7149
+
+Document len : 50426
+Parsing: 14862
+Adding Document: 8
+Indexing Document: 6770
+
+Document len : 66376
+Parsing: 21457
+Adding Document: 5
+Indexing Document: 8858
+
+Document len : 2517
+Parsing: 796
+Adding Document: 4
+Indexing Document: 1299
+
+Bincode Serialize: 28166
+Yaml Serialize: 428684

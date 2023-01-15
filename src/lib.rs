@@ -2,8 +2,7 @@
 #![allow(dead_code)]
 #![allow(unstable_features)]
 use crc32fast::hash;
-use serde::__private::doc;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, __private::doc};
 use std::{
     collections::{
         hash_map::{self, DefaultHasher},
@@ -54,16 +53,15 @@ impl WebScout {
     }
     pub fn parse_body(&self, document: &Document) -> HashMap<String, u32> {
         let mut tokens: HashMap<String, u32> = HashMap::default();
-        let bin_body = document.body.as_bytes().to_owned();
-        let mut words: Vec<String> = vec![];
         let mut word: Vec<u8> = vec![];
-        for byte in bin_body {
+        let bin_body = document.body.as_bytes();
+        for byte in bin_body.to_vec() {
             if byte.is_ascii_alphanumeric() {
-                word.push(byte.to_ascii_lowercase());
+                word.push(byte);
             } else {
                 if word.len() > 1 {
-                    let fword = String::from_utf8(word.to_owned()).unwrap();
-                    words.push(fword.to_owned());
+                    let mut fword = unsafe { String::from_utf8_unchecked(word.to_owned()) };
+                    fword.make_ascii_lowercase();
                     if tokens.contains_key(&fword) {
                         tokens.entry(fword).and_modify(|e| *e += 1);
                     } else {
@@ -76,6 +74,7 @@ impl WebScout {
         return tokens;
     }
     pub fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
+        self.store.docs_keys.insert(hash(document.title.as_bytes()));
         for token in tokens {
             let mut dict = &mut self.store.dict;
             if dict.contains_key(&Token {
