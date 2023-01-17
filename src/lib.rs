@@ -4,6 +4,7 @@
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::{
+    borrow::Borrow,
     collections::{
         hash_map::{self, DefaultHasher},
         HashMap, HashSet,
@@ -17,12 +18,18 @@ pub struct Document {
     pub title: String,
     pub body: String,
 }
-#[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize, Default, Clone)]
 
 struct Token {
     value: String,
 }
-#[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+
+#[derive(Default, Debug)]
+pub struct IndexedToken {
+    token: Token,
+    index: Index,
+}
+#[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Default, Clone)]
 
 struct Index {
     freq: u32,
@@ -31,22 +38,20 @@ struct Index {
 #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
 
 struct Store {
-    docs_keys: HashSet<u32>,
     dict: HashMap<Token, Index>,
 }
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WebScout {
-    title: &'static str,
+    title: String,
     documents: HashMap<String, u32>, // 1st value: document name, 2nd value: document id
     store: Store,
 }
 impl WebScout {
     pub fn new() -> Self {
         WebScout {
-            title: "WebScout LLC",
+            title: "WebScout LLC".to_string(),
             documents: HashMap::new(),
             store: Store {
-                docs_keys: HashSet::new(),
                 dict: HashMap::new(),
             },
         }
@@ -73,8 +78,16 @@ impl WebScout {
         }
         return tokens;
     }
+    pub fn tokenize(&self, lemmer: &HashMap<String, String>, tokens: &mut HashMap<String, u32>) {
+        for token in tokens.clone() {
+            if lemmer.contains_key(&token.0) {
+                let lemma = lemmer.get(&token.0).unwrap();
+                let prev_token = tokens.remove_entry(&token.0).unwrap();
+                tokens.insert(lemma.to_owned(), prev_token.1);
+            }
+        }
+    }
     pub fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
-        self.store.docs_keys.insert(hash(document.title.as_bytes()));
         for token in tokens {
             let mut dict = &mut self.store.dict;
             if dict.contains_key(&Token {
@@ -117,10 +130,25 @@ impl WebScout {
         self.documents
             .insert(document.title.to_owned(), hash(document.title.as_bytes()));
     }
-    fn export_store() {
-        todo!();
+    pub fn get_tokens(self, tokens: &Vec<String>) -> Vec<IndexedToken> {
+        let mut result: Vec<IndexedToken> = vec![];
+        for token in tokens {
+            let key = &Token {
+                value: token.to_owned(),
+            };
+            if self.store.dict.contains_key(key) {
+                let pair = self.store.dict.get_key_value(key).unwrap();
+                let idxtoken = IndexedToken {
+                    token: pair.0.to_owned(),
+                    index: pair.1.to_owned(),
+                };
+                result.push(idxtoken)
+            }
+        }
+        return result;
     }
-    fn read_store() {
-        todo!()
+    pub fn from_binary(data: Vec<u8>) -> WebScout {
+        let ws: WebScout = bincode::deserialize(&data).unwrap();
+        return ws;
     }
 }

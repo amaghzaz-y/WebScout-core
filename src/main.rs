@@ -6,59 +6,75 @@ use serde::{Deserialize, Serialize, __private::doc};
 use std::{
     char,
     collections::{hash_map::DefaultHasher, HashMap, HashSet},
-    fs,
+    fs::{self, File},
     hash::{Hash, Hasher},
+    io::{BufRead, BufReader, Read},
     process::id,
     time::Instant,
     vec,
 };
 use web_scout::{Document, WebScout};
 
-fn read_docs() -> Vec<Document> {
-    let mut docs: Vec<Document> = vec![];
-    let dir = fs::read_dir("data").unwrap();
-    let mut count = 0;
+fn serialize_lemtxt() {
+    let mut files: Vec<(String, BufReader<File>)> = vec![];
+    let dir = fs::read_dir("lemtxt").unwrap();
     for entry in dir {
         let file = entry.unwrap();
-        docs.push(Document {
-            title: file.file_name().to_str().unwrap().to_owned(),
-            body: fs::read_to_string(file.path()).unwrap(),
-        });
-        count += 1;
+        let rd = fs::File::open(file.path()).unwrap();
+        files.push((
+            file.file_name().to_str().unwrap().to_owned(),
+            BufReader::new(rd),
+        ));
     }
-    return docs;
+    let mut lemmap: HashMap<String, String> = HashMap::new();
+    for file in files {
+        println!("serialzing :: {:?}", file.1);
+        let mut map: HashMap<String, String> = HashMap::new();
+        for line in file.1.lines() {
+            let mut line = line.unwrap();
+            let lemma: Vec<&str> = line.split_whitespace().collect();
+            if lemma.len() > 1 {
+                map.insert(lemma[1].to_owned(), lemma[0].to_owned());
+                lemmap.insert(lemma[1].to_owned(), lemma[0].to_owned());
+            }
+        }
+        fs::write(
+            format!("lembin/{:?}", file.0.to_owned()),
+            bincode::serialize(&map).unwrap(),
+        );
+    }
+    fs::write("lembin/lembin", bincode::serialize(&lemmap).unwrap());
 }
-
+// fn read_docs() -> Vec<Document> {
+// //     let mut docs: Vec<Document> = vec![];
+// //     let dir = fs::read_dir("data").unwrap();
+// //     for entry in dir {
+// //         let file = entry.unwrap();
+// //         docs.push(Document {
+// //             title: file.file_name().to_str().unwrap().to_owned(),
+// //             body: fs::read_to_string(file.path()).unwrap(),
+// //         });
+// //     }
+// //     return docs;
+// // }
 fn main() {
-    let mut docs = read_docs();
-    let mut ws = WebScout::new();
-    let mut length = 0;
-    let mut top_timer = Instant::now();
-    for doc in docs {
-        let mut now = Instant::now();
-        let bin_body = doc.body.as_bytes().to_owned();
-        println!("To bin: {:?}", now.elapsed().as_micros());
-        println!("Document len : {:?}", doc.body.len());
-        now = Instant::now();
-        let mut tokens = ws.parse_body(&doc);
-        println!("Parsing: {:?}", now.elapsed().as_micros());
-        now = Instant::now();
-        ws.add_document(&doc);
-        println!("Adding Document: {:?}", now.elapsed().as_micros());
-        now = Instant::now();
-        ws.index_tokens(&tokens, &doc);
-        println!("Indexing Document: {:?}", now.elapsed().as_micros());
-        println!();
-        length += doc.body.len();
-    }
-    let elapsed = top_timer.elapsed().as_millis();
-    let mut now = Instant::now();
-    let bin = bincode::serialize(&ws).unwrap();
-    println!("Bincode Serialize: {:?}", now.elapsed().as_micros());
-    now = Instant::now();
-    let yaml = serde_yaml::to_string(&ws).unwrap();
-    println!("Yaml Serialize: {:?}", now.elapsed().as_micros());
-    fs::write("ws.bin", bin);
-    fs::write("ws.yml", yaml);
-    println!("Indexed {:?} words in {:?}", length, elapsed);
+    //     let mut docs = read_docs();
+    //     let mut ws = WebScout::new();
+    //     let lembin = fs::read("lembin/lembin").unwrap();
+    //     let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    //     let mut top_timer = Instant::now();
+    //     for doc in docs {
+    //         let mut tokens = ws.parse_body(&doc);
+    //         ws.tokenize(&lemmer, &mut tokens);
+    //         ws.add_document(&doc);
+    //         ws.index_tokens(&tokens, &doc);
+    //     }
+    //     let bin = bincode::serialize(&ws).unwrap();
+    //     let yaml = serde_yaml::to_string(&ws).unwrap();
+    //     fs::write("ws.bin", bin);
+    //     fs::write("ws.yml", yaml);
+    let data = fs::read("ws.bin").unwrap();
+    let nws = WebScout::from_binary(data);
+    let tokens = nws.get_tokens(&vec!["area".to_string()]);
+    println!("{:?}", tokens);
 }
