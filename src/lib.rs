@@ -185,7 +185,7 @@ impl WebScout {
         tokens.dedup();
         return tokens;
     }
-    fn evalute_query(&self, tokens: &Vec<IndexedToken>) {
+    fn evalute_query(&self, tokens: &Vec<IndexedToken>) -> Vec<(u32, f32)> {
         let mut documents: HashMap<u32, HashSet<(String, u32, u32)>> = HashMap::default();
         for token in tokens {
             for doc in &token.index.spots {
@@ -229,6 +229,7 @@ impl WebScout {
         }
         scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         println!("{:?}", scores);
+        return scores;
     }
     pub fn search(&self, search: &'static str, lemmer: &HashMap<String, String>) {
         let mut tokens = self.raw_to_vec(&mut search.to_string());
