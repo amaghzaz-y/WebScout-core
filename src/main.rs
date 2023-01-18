@@ -79,5 +79,8 @@ fn main() {
     let data = fs::read("ws.bin").unwrap();
     let nws = WebScout::from_binary(data);
     println!("search :::");
-    nws.search("mothers hi", &lemmer);
+    nws.search(
+        "COPYRIGHT 1990, JIM PRENTICE, BRANDON, MANITOBA, CANADA",
+        &lemmer,
+    );
 }

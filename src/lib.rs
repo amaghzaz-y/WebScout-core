@@ -186,23 +186,49 @@ impl WebScout {
         return tokens;
     }
     fn evalute_query(&self, tokens: &Vec<IndexedToken>) {
-        let mut documents: HashMap<u32, HashSet<(String, u32)>> = HashMap::default();
+        let mut documents: HashMap<u32, HashSet<(String, u32, u32)>> = HashMap::default();
         for token in tokens {
             for doc in &token.index.spots {
                 if documents.contains_key(doc.0) {
-                    documents
-                        .entry(doc.0.to_owned())
-                        .or_default()
-                        .insert((token.token.value.to_owned(), doc.1.to_owned()));
+                    documents.entry(doc.0.to_owned()).or_default().insert((
+                        token.token.value.to_owned(),
+                        doc.1.to_owned(),
+                        token.index.freq.to_owned(),
+                    ));
                 } else {
                     documents.insert(
                         doc.0.to_owned(),
-                        HashSet::from([(token.token.value.to_owned(), doc.1.to_owned())]),
+                        HashSet::from([(
+                            token.token.value.to_owned(),
+                            doc.1.to_owned(),
+                            token.index.freq.to_owned(),
+                        )]),
                     );
                 }
             }
         }
-        println!("{:?}", documents);
+        let mut scores: Vec<(u32, f32)> = vec![];
+        for doc in &documents {
+            let mut word_freq_ratio: f32 = 0.0;
+            for token in doc.1 {
+                word_freq_ratio += token.1 as f32 / token.2 as f32;
+                println!(
+                    "freq: {:?}, frqt: {:?} wfr: {:?}",
+                    token.1, token.2, word_freq_ratio
+                );
+            }
+            let query_ratio: f32 = (doc.1.len() as f32 / tokens.len() as f32);
+            let total_word_freq_ratio = word_freq_ratio / (tokens.len() as f32);
+            let score = query_ratio * total_word_freq_ratio;
+            println!(
+                "qr: {:?}, twfr: {:?}, score: {:?}",
+                query_ratio, total_word_freq_ratio, score
+            );
+            scores.push((doc.0.to_owned(), (score * 100.0)));
+            println!();
+        }
+        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        println!("{:?}", scores);
     }
     pub fn search(&self, search: &'static str, lemmer: &HashMap<String, String>) {
         let mut tokens = self.raw_to_vec(&mut search.to_string());
