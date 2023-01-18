@@ -45,36 +45,39 @@ fn serialize_lemtxt() {
     }
     fs::write("lembin/lembin", bincode::serialize(&lemmap).unwrap());
 }
-// fn read_docs() -> Vec<Document> {
-// //     let mut docs: Vec<Document> = vec![];
-// //     let dir = fs::read_dir("data").unwrap();
-// //     for entry in dir {
-// //         let file = entry.unwrap();
-// //         docs.push(Document {
-// //             title: file.file_name().to_str().unwrap().to_owned(),
-// //             body: fs::read_to_string(file.path()).unwrap(),
-// //         });
-// //     }
-// //     return docs;
-// // }
+fn read_docs() -> Vec<Document> {
+    let mut docs: Vec<Document> = vec![];
+    let dir = fs::read_dir("data").unwrap();
+    for entry in dir {
+        let file = entry.unwrap();
+        docs.push(Document {
+            title: file.file_name().to_str().unwrap().to_owned(),
+            body: fs::read_to_string(file.path()).unwrap(),
+        });
+    }
+    return docs;
+}
 fn main() {
-    //     let mut docs = read_docs();
-    //     let mut ws = WebScout::new();
-    //     let lembin = fs::read("lembin/lembin").unwrap();
-    //     let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
-    //     let mut top_timer = Instant::now();
-    //     for doc in docs {
-    //         let mut tokens = ws.parse_body(&doc);
-    //         ws.tokenize(&lemmer, &mut tokens);
-    //         ws.add_document(&doc);
-    //         ws.index_tokens(&tokens, &doc);
-    //     }
-    //     let bin = bincode::serialize(&ws).unwrap();
-    //     let yaml = serde_yaml::to_string(&ws).unwrap();
-    //     fs::write("ws.bin", bin);
-    //     fs::write("ws.yml", yaml);
+    // let mut docs = read_docs();
+    // let mut ws = WebScout::new();
+    // println!("deser lembin");
+    // let lembin = fs::read("lembin/en.bin").unwrap();
+    // let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    // let mut top_timer = Instant::now();
+    // for doc in docs {
+    //     let mut tokens = ws.parse_body(&doc);
+    //     ws.tokenize(&lemmer, &mut tokens);
+    //     ws.add_document(&doc);
+    //     ws.index_tokens(&tokens, &doc);
+    // }
+    // let bin = bincode::serialize(&ws).unwrap();
+    // let yaml = serde_yaml::to_string(&ws).unwrap();
+    // fs::write("ws.bin", bin);
+    // fs::write("ws.yml", yaml);
+    let lembin = fs::read("lembin/en.bin").unwrap();
+    let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
     let data = fs::read("ws.bin").unwrap();
     let nws = WebScout::from_binary(data);
-    let tokens = nws.get_tokens(&vec!["area".to_string()]);
-    println!("{:?}", tokens);
+    println!("search :::");
+    nws.search("mothers hi", &lemmer);
 }

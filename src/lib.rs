@@ -43,7 +43,7 @@ struct Store {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WebScout {
     title: String,
-    documents: HashMap<String, u32>, // 1st value: document name, 2nd value: document id
+    documents: HashMap<u32, String>, // 1st value: document name, 2nd value: document id
     store: Store,
 }
 impl WebScout {
@@ -56,9 +56,10 @@ impl WebScout {
             },
         }
     }
-    pub fn parse_body(&self, document: &Document) -> HashMap<String, u32> {
+    pub fn parse_body(&self, document: &mut Document) -> HashMap<String, u32> {
         let mut tokens: HashMap<String, u32> = HashMap::default();
         let mut word: Vec<u8> = vec![];
+        document.body.push('/'); // to mark the end of document
         let bin_body = document.body.as_bytes();
         for byte in bin_body.to_vec() {
             if byte.is_ascii_alphanumeric() {
@@ -128,9 +129,9 @@ impl WebScout {
     }
     pub fn add_document(&mut self, document: &Document) {
         self.documents
-            .insert(document.title.to_owned(), hash(document.title.as_bytes()));
+            .insert(hash(document.title.as_bytes()), document.title.to_owned());
     }
-    pub fn get_tokens(self, tokens: &Vec<String>) -> Vec<IndexedToken> {
+    pub fn query(&self, tokens: &Vec<String>) -> Vec<IndexedToken> {
         let mut result: Vec<IndexedToken> = vec![];
         for token in tokens {
             let key = &Token {
@@ -146,6 +147,68 @@ impl WebScout {
             }
         }
         return result;
+    }
+    fn raw_to_vec(&self, query: &mut String) -> Vec<String> {
+        query.push('/');
+        let mut word: Vec<u8> = vec![];
+        let mut tokens: Vec<String> = vec![];
+        let query = query.as_bytes().to_vec();
+        for char in query {
+            if char.is_ascii_alphanumeric() {
+                word.push(char);
+            } else {
+                if word.len() > 1 {
+                    let mut fword = unsafe { String::from_utf8(word.to_owned()).unwrap() };
+                    fword.make_ascii_lowercase();
+                    tokens.push(fword);
+                }
+                word.clear();
+            }
+        }
+        return tokens;
+    }
+    pub fn tokenize_search(
+        &self,
+        search: Vec<String>,
+        lemmer: &HashMap<String, String>,
+    ) -> Vec<String> {
+        let mut tokens: Vec<String> = vec![];
+        for mut key in search {
+            if lemmer.contains_key(&key) {
+                let lemma = lemmer.get(&key).unwrap().to_owned();
+                tokens.push(lemma);
+            } else {
+                tokens.push(key);
+            }
+        }
+        tokens.sort();
+        tokens.dedup();
+        return tokens;
+    }
+    fn evalute_query(&self, tokens: &Vec<IndexedToken>) {
+        let mut documents: HashMap<u32, HashSet<(String, u32)>> = HashMap::default();
+        for token in tokens {
+            for doc in &token.index.spots {
+                if documents.contains_key(doc.0) {
+                    documents
+                        .entry(doc.0.to_owned())
+                        .or_default()
+                        .insert((token.token.value.to_owned(), doc.1.to_owned()));
+                } else {
+                    documents.insert(
+                        doc.0.to_owned(),
+                        HashSet::from([(token.token.value.to_owned(), doc.1.to_owned())]),
+                    );
+                }
+            }
+        }
+        println!("{:?}", documents);
+    }
+    pub fn search(&self, search: &'static str, lemmer: &HashMap<String, String>) {
+        let mut tokens = self.raw_to_vec(&mut search.to_string());
+        tokens = self.tokenize_search(tokens, lemmer);
+        let r = self.query(&tokens);
+        self.evalute_query(&r);
     }
     pub fn from_binary(data: Vec<u8>) -> WebScout {
         let ws: WebScout = bincode::deserialize(&data).unwrap();
