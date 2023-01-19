@@ -65,7 +65,7 @@ fn main() {
     let mut top_timer = Instant::now();
     for mut doc in docs {
         let mut tokens = ws.parse_body(&mut doc);
-        ws.tokenize(&lemmer, &mut tokens);  
+        ws.tokenize(&lemmer, &mut tokens);
         ws.add_document(&doc);
         ws.index_tokens(&tokens, &doc);
     }
