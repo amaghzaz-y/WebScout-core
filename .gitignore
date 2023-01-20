@@ -2,5 +2,4 @@
 /data
 *.bin
 *.yml
-lemtxt
-lembin
+lemmers
