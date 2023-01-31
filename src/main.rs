@@ -14,10 +14,9 @@ use std::{
     vec,
 };
 use web_scout::{Document, WebScout};
-
 fn serialize_lemtxt() {
     let mut files: Vec<(String, BufReader<File>)> = vec![];
-    let dir = fs::read_dir("lemtxt").unwrap();
+    let dir = fs::read_dir("lemmers/src").unwrap();
     for entry in dir {
         let file = entry.unwrap();
         let rd = fs::File::open(file.path()).unwrap();
@@ -39,15 +38,25 @@ fn serialize_lemtxt() {
             }
         }
         fs::write(
-            format!("lembin/{:?}", file.0.to_owned()),
+            format!(
+                "lemmers/bin/{:?}",
+                file.0.to_owned().trim_end_matches(".txt")
+            ),
             bincode::serialize(&map).unwrap(),
+        );
+        fs::write(
+            format!(
+                "lemmers/packs/{:?}",
+                file.0.to_owned().trim_end_matches(".txt")
+            ),
+            rmp_serde::encode::to_vec(&map).unwrap(),
         );
     }
     fs::write("lembin/lembin", bincode::serialize(&lemmap).unwrap());
 }
 fn read_docs() -> Vec<Document> {
     let mut docs: Vec<Document> = vec![];
-    let dir = fs::read_dir("data").unwrap();
+    let dir = fs::read_dir("books").unwrap();
     for entry in dir {
         let file = entry.unwrap();
         docs.push(Document {
@@ -58,28 +67,34 @@ fn read_docs() -> Vec<Document> {
     return docs;
 }
 fn main() {
-    let mut docs = read_docs();
-    let mut ws = WebScout::new();
-    let lembin = fs::read("lembin/en.bin").unwrap();
-    let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
-    let mut top_timer = Instant::now();
-    for mut doc in docs {
-        let mut tokens = ws.parse_body(&mut doc);
-        ws.tokenize(&lemmer, &mut tokens);
-        ws.add_document(&doc);
-        ws.index_tokens(&tokens, &doc);
-    }
-    let bin = bincode::serialize(&ws).unwrap();
-    let yaml = serde_yaml::to_string(&ws).unwrap();
-    fs::write("ws.bin", bin);
-    fs::write("ws.yml", yaml);
-    let lembin = fs::read("lembin/en.bin").unwrap();
-    let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
-    let data = fs::read("ws.bin").unwrap();
-    let nws = WebScout::from_binary(data);
-    println!("search :::");
-    nws.search(
-        "COPYRIGHT 1990, JIM PRENTICE, BRANDON, MANITOBA, CANADA",
-        &lemmer,
-    );
+    serialize_lemtxt();
+    // let mut docs = read_docs();
+    // let mut ws = WebScout::new();
+    // let lembin = fs::read("lemmers/bin/\"lemmatization-en\"").unwrap();
+    // let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    // let mut top_timer = Instant::now();
+    // for mut doc in docs {
+    //     let mut tokens = ws.parse_body(&mut doc);
+    //     ws.tokenize(&lemmer, &mut tokens);
+    //     ws.add_document(&doc);
+    //     ws.index_tokens(&tokens, &doc);
+    // }
+    // let bin = bincode::serialize(&ws).unwrap();
+    // let yaml = serde_yaml::to_string(&ws).unwrap();
+    // let rontxt = ron::to_string(&ws).unwrap();
+    // let rmptxt = rmp_serde::encode::to_vec(&ws).unwrap();
+    // fs::write("ws.ron", rontxt);
+    // fs::write("ws.bin", bin);
+    // fs::write("ws.yml", yaml);
+    // fs::write("ws.msgpk", rmptxt);
+    // let lembin = fs::read("lemmers/bin/\"lemmatization-en\"").unwrap();
+    // let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    // let data = fs::read("ws.msgpk").unwrap();
+    // let nws = WebScout::from_pack(data);
+    // println!("search :::");
+    // nws.search(
+    //     "not as a gentleman who gives
+    // a private or eleemosynary treat",
+    //     &lemmer,
+    // );
 }

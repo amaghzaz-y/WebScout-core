@@ -241,4 +241,8 @@ impl WebScout {
         let ws: WebScout = bincode::deserialize(&data).unwrap();
         return ws;
     }
+    pub fn from_pack(data: Vec<u8>) -> WebScout {
+        let ws: WebScout = rmp_serde::decode::from_slice(&data).unwrap();
+        return ws;
+    }
 }
