@@ -10,7 +10,7 @@ use std::{
     hash::{Hash, Hasher},
     io::{BufRead, BufReader, Read},
     process::id,
-    time::Instant,
+    time::{self, Instant},
     vec,
 };
 use web_scout::{Document, WebScout};
@@ -37,22 +37,30 @@ fn serialize_lemtxt() {
                 lemmap.insert(lemma[1].to_owned(), lemma[0].to_owned());
             }
         }
-        fs::write(
-            format!(
-                "lemmers/bin/{:?}",
-                file.0.to_owned().trim_end_matches(".txt")
-            ),
-            bincode::serialize(&map).unwrap(),
-        );
-        fs::write(
-            format!(
-                "lemmers/packs/{:?}",
-                file.0.to_owned().trim_end_matches(".txt")
-            ),
-            rmp_serde::encode::to_vec(&map).unwrap(),
-        );
+        // fs::write(
+        //     format!(
+        //         "lemmers/bin/{:?}",
+        //         file.0.to_owned().trim_end_matches(".txt")
+        //     ),
+        //     bincode::serialize(&map).unwrap(),
+        // );
+        // fs::write(
+        //     format!(
+        //         "lemmers/packs/{:?}",
+        //         file.0.to_owned().trim_end_matches(".txt")
+        //     ),
+        //     rmp_serde::encode::to_vec(&map).unwrap(),
+        // );
     }
-    fs::write("lembin/lembin", bincode::serialize(&lemmap).unwrap());
+    let mut now = time::Instant::now();
+    fs::write("lemmers/map/map.bin", bincode::serialize(&lemmap).unwrap());
+    println!("bin elapsed: {:?}", now.elapsed().as_millis());
+    now = time::Instant::now();
+    fs::write(
+        "lemmers/map/map.mpack",
+        rmp_serde::encode::to_vec(&lemmap).unwrap(),
+    );
+    println!("rmp elapsed: {:?}", now.elapsed().as_millis());
 }
 fn read_docs() -> Vec<Document> {
     let mut docs: Vec<Document> = vec![];
@@ -67,11 +75,11 @@ fn read_docs() -> Vec<Document> {
     return docs;
 }
 fn main() {
-    serialize_lemtxt();
+    //serialize_lemtxt();
     // let mut docs = read_docs();
     // let mut ws = WebScout::new();
-    // let lembin = fs::read("lemmers/bin/\"lemmatization-en\"").unwrap();
-    // let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    let lemrmp = fs::read("lemmers/packs/en.mpk").unwrap();
+    let lemmer_rmp: HashMap<String, String> = rmp_serde::decode::from_slice(&lemrmp).unwrap();
     // let mut top_timer = Instant::now();
     // for mut doc in docs {
     //     let mut tokens = ws.parse_body(&mut doc);
@@ -88,13 +96,13 @@ fn main() {
     // fs::write("ws.yml", yaml);
     // fs::write("ws.msgpk", rmptxt);
     // let lembin = fs::read("lemmers/bin/\"lemmatization-en\"").unwrap();
-    // let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
-    // let data = fs::read("ws.msgpk").unwrap();
-    // let nws = WebScout::from_pack(data);
-    // println!("search :::");
-    // nws.search(
-    //     "not as a gentleman who gives
-    // a private or eleemosynary treat",
-    //     &lemmer,
-    // );
+    //let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
+    let data = fs::read("ws.msgpk").unwrap();
+    let nws = WebScout::from_pack(data);
+    println!("search :::");
+    nws.search(
+        "not as a gentleman who gives
+    a private or eleemosynary treat",
+        &lemmer_rmp,
+    );
 }
