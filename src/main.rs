@@ -2,6 +2,7 @@
 #![allow(dead_code)]
 #![allow(unstable_features)]
 use crc32fast::hash;
+use fuse::{Document, Fuse};
 use serde::{Deserialize, Serialize, __private::doc};
 use std::{
     char,
@@ -13,7 +14,6 @@ use std::{
     time::{self, Instant},
     vec,
 };
-use web_scout::{Document, WebScout};
 fn serialize_lemtxt() {
     let mut files: Vec<(String, BufReader<File>)> = vec![];
     let dir = fs::read_dir("lemmers/src").unwrap();
@@ -27,7 +27,7 @@ fn serialize_lemtxt() {
     }
     let mut lemmap: HashMap<String, String> = HashMap::new();
     for file in files {
-        println!("serialzing :: {:?}", file.1);
+        println!("serialzing :: {:?}", file.0);
         let mut map: HashMap<String, String> = HashMap::new();
         for line in file.1.lines() {
             let mut line = line.unwrap();
@@ -37,20 +37,20 @@ fn serialize_lemtxt() {
                 lemmap.insert(lemma[1].to_owned(), lemma[0].to_owned());
             }
         }
-        // fs::write(
-        //     format!(
-        //         "lemmers/bin/{:?}",
-        //         file.0.to_owned().trim_end_matches(".txt")
-        //     ),
-        //     bincode::serialize(&map).unwrap(),
-        // );
-        // fs::write(
-        //     format!(
-        //         "lemmers/packs/{:?}",
-        //         file.0.to_owned().trim_end_matches(".txt")
-        //     ),
-        //     rmp_serde::encode::to_vec(&map).unwrap(),
-        // );
+        fs::write(
+            format!(
+                "lemmers/bin/{:?}",
+                file.0.to_owned().trim_end_matches(".txt")
+            ),
+            bincode::serialize(&map).unwrap(),
+        );
+        fs::write(
+            format!(
+                "lemmers/packs/{:?}",
+                file.0.to_owned().trim_end_matches(".txt")
+            ),
+            rmp_serde::encode::to_vec(&map).unwrap(),
+        );
     }
     let mut now = time::Instant::now();
     fs::write("lemmers/map/map.bin", bincode::serialize(&lemmap).unwrap());
@@ -75,34 +75,19 @@ fn read_docs() -> Vec<Document> {
     return docs;
 }
 fn main() {
-    //serialize_lemtxt();
-    // let mut docs = read_docs();
-    // let mut ws = WebScout::new();
+    let mut docs = read_docs();
+    let mut ws = Fuse::new();
     let lemrmp = fs::read("lemmers/packs/en.mpk").unwrap();
-    let lemmer_rmp: HashMap<String, String> = rmp_serde::decode::from_slice(&lemrmp).unwrap();
-    // let mut top_timer = Instant::now();
+    let lemmer: HashMap<String, String> = rmp_serde::decode::from_slice(&lemrmp).unwrap();
     // for mut doc in docs {
-    //     let mut tokens = ws.parse_body(&mut doc);
-    //     ws.tokenize(&lemmer, &mut tokens);
-    //     ws.add_document(&doc);
-    //     ws.index_tokens(&tokens, &doc);
+    //     ws.add_document(&lemmer, &mut doc);
     // }
-    // let bin = bincode::serialize(&ws).unwrap();
     // let yaml = serde_yaml::to_string(&ws).unwrap();
-    // let rontxt = ron::to_string(&ws).unwrap();
-    // let rmptxt = rmp_serde::encode::to_vec(&ws).unwrap();
-    // fs::write("ws.ron", rontxt);
-    // fs::write("ws.bin", bin);
+    // let index = rmp_serde::encode::to_vec(&ws).unwrap();
     // fs::write("ws.yml", yaml);
-    // fs::write("ws.msgpk", rmptxt);
-    // let lembin = fs::read("lemmers/bin/\"lemmatization-en\"").unwrap();
-    //let lemmer: HashMap<String, String> = bincode::deserialize(&lembin).unwrap();
-    let data = fs::read("ws.msgpk").unwrap();
-    let nws = WebScout::from_pack(data);
+    // fs::write("index.mpk", index);
+    let data = fs::read("index.mpk").unwrap();
+    let nws = Fuse::from_pack(data);
     println!("search :::");
-    nws.search(
-        "not as a gentleman who gives
-    a private or eleemosynary treat",
-        &lemmer_rmp,
-    );
+    nws.search("You mean Mr. Duncan, the president of the bank?", &lemmer);
 }

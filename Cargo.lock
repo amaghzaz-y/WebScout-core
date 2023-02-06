@@ -51,6 +51,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "fuse"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "crc32fast",
+ "rmp-serde",
+ "ron",
+ "serde",
+ "serde_json",
+ "serde_yaml",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -210,16 +223,3 @@ name = "unsafe-libyaml"
 version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bc7ed8ba44ca06be78ea1ad2c3682a43349126c8818054231ee6f4748012aed2"
-
-[[package]]
-name = "web_scout"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "crc32fast",
- "rmp-serde",
- "ron",
- "serde",
- "serde_json",
- "serde_yaml",
-]

@@ -41,14 +41,14 @@ struct Store {
     dict: HashMap<Token, Index>,
 }
 #[derive(Debug, Serialize, Deserialize)]
-pub struct WebScout {
+pub struct Fuse {
     title: String,
     documents: HashMap<u32, String>, // 1st value: document name, 2nd value: document id
     store: Store,
 }
-impl WebScout {
+impl Fuse {
     pub fn new() -> Self {
-        WebScout {
+        Fuse {
             title: "WebScout LLC".to_string(),
             documents: HashMap::new(),
             store: Store {
@@ -56,11 +56,18 @@ impl WebScout {
             },
         }
     }
-    pub fn parse_body(&self, document: &mut Document) -> HashMap<String, u32> {
+    pub fn add_document(&mut self, lemmer: &HashMap<String, String>, document: &mut Document) {
+        self.documents
+            .insert(hash(document.title.as_bytes()), document.title.to_owned());
+        let mut tokens = self.parse_text(&mut document.body);
+        self.transform_tokens(lemmer, &mut tokens);
+        self.index_tokens(&tokens, document);
+    }
+    fn parse_text(&self, text: &mut String) -> HashMap<String, u32> {
         let mut tokens: HashMap<String, u32> = HashMap::default();
         let mut word: Vec<u8> = vec![];
-        document.body.push('/'); // to mark the end of document
-        let bin_body = document.body.as_bytes();
+        text.push('/'); // to mark the end of document
+        let bin_body = text.as_bytes();
         for byte in bin_body.to_vec() {
             if byte.is_ascii_alphanumeric() {
                 word.push(byte);
@@ -79,7 +86,11 @@ impl WebScout {
         }
         return tokens;
     }
-    pub fn tokenize(&self, lemmer: &HashMap<String, String>, tokens: &mut HashMap<String, u32>) {
+    fn transform_tokens(
+        &self,
+        lemmer: &HashMap<String, String>,
+        tokens: &mut HashMap<String, u32>,
+    ) {
         for token in tokens.clone() {
             if lemmer.contains_key(&token.0) {
                 let lemma = lemmer.get(&token.0).unwrap();
@@ -88,7 +99,7 @@ impl WebScout {
             }
         }
     }
-    pub fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
+    fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
         for token in tokens {
             let mut dict = &mut self.store.dict;
             if dict.contains_key(&Token {
@@ -127,11 +138,8 @@ impl WebScout {
             });
         }
     }
-    pub fn add_document(&mut self, document: &Document) {
-        self.documents
-            .insert(hash(document.title.as_bytes()), document.title.to_owned());
-    }
-    pub fn query(&self, tokens: &Vec<String>) -> Vec<IndexedToken> {
+
+    fn query(&self, tokens: &Vec<String>) -> Vec<IndexedToken> {
         let mut result: Vec<IndexedToken> = vec![];
         for token in tokens {
             let key = &Token {
@@ -167,7 +175,7 @@ impl WebScout {
         }
         return tokens;
     }
-    pub fn tokenize_search(
+    fn tokenize_search(
         &self,
         search: Vec<String>,
         lemmer: &HashMap<String, String>,
@@ -224,15 +232,20 @@ impl WebScout {
     pub fn search(&self, search: &'static str, lemmer: &HashMap<String, String>) {
         let mut tokens = self.raw_to_vec(&mut search.to_string());
         tokens = self.tokenize_search(tokens, lemmer);
-        let r = self.query(&tokens);
-        self.evaluate_query(&r);
+        let query = self.query(&tokens);
+        let scores = self.evaluate_query(&query);
+        for score in scores {
+            let doc_name = self.documents.get(&score.0).unwrap();
+            println!("document: {:?}", doc_name);
+            println!("score: {:?}", score.1.ceil());
+        }
     }
-    pub fn from_binary(data: Vec<u8>) -> WebScout {
-        let ws: WebScout = bincode::deserialize(&data).unwrap();
+    pub fn from_binary(data: Vec<u8>) -> Fuse {
+        let ws: Fuse = bincode::deserialize(&data).unwrap();
         return ws;
     }
-    pub fn from_pack(data: Vec<u8>) -> WebScout {
-        let ws: WebScout = rmp_serde::decode::from_slice(&data).unwrap();
+    pub fn from_pack(data: Vec<u8>) -> Fuse {
+        let ws: Fuse = rmp_serde::decode::from_slice(&data).unwrap();
         return ws;
     }
 }
