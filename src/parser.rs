@@ -1,9 +1,5 @@
+use crate::types::Document;
 use std::collections::{HashMap, HashSet};
-
-pub struct Document {
-    pub id: usize,
-    pub index: HashMap<String, HashSet<usize>>,
-}
 pub fn parse_string(mut text: String) -> HashMap<String, HashSet<usize>> {
     let mut map: HashMap<String, HashSet<usize>> = HashMap::default();
     let mut chars: Vec<u8> = vec![];

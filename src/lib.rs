@@ -18,12 +18,8 @@ use std::collections::{HashMap, HashSet};
 
 mod parser;
 mod tokenizer;
+mod types;
 
-struct Document {
-    id: usize,
-    lang: String,
-    index: HashMap<String, HashSet<usize>>, // words with it's current position on document
-}
 // #[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 // pub struct Document {
 //     pub title: String,
