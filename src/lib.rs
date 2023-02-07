@@ -13,6 +13,8 @@ use std::{
     ops::Add,
     str, vec,
 };
+
+mod tokenizer;
 #[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 pub struct Document {
     pub title: String,
