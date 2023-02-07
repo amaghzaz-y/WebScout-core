@@ -1,3 +1,4 @@
+use crate::parser::Document;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fs};
 #[derive(Serialize, Deserialize)]
@@ -11,10 +12,11 @@ pub fn tokenize_string(mut word: String, lemmer: &Lemmer) {
     if lemma.is_some() {
         word = lemma.unwrap().to_owned();
     }
+	return 
 }
-pub fn tokenize_vec(mut vec: Vec<String>, lemmer: &Lemmer) {
-    for mut word in vec {
-        tokenize_string(word, lemmer);
+pub fn tokenize_document(mut document: Document, lemmer: &Lemmer) {
+    for (token, _) in document.index {
+        tokenize_string(token, lemmer);
     }
 }
 
