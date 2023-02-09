@@ -1,18 +1,26 @@
 use crate::types::{Document, Lemmer};
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, fs};
+use std::{
+    collections::{HashMap, HashSet},
+    fs,
+    hash::Hash,
+};
 
-pub fn tokenize_string(mut word: String, lemmer: &Lemmer) {
-    let lemma = lemmer.map.get(&word);
-    if lemma.is_some() {
-        word = lemma.unwrap().to_owned();
+pub fn tokenize_string(word: &String, lemmer: &Lemmer) -> String {
+    let mut lemma: String = String::new();
+    let value = lemmer.map.get(word);
+    if value.is_some() {
+        lemma = value.unwrap().to_owned();
     }
-    return;
+    return lemma;
 }
-pub fn tokenize_document(mut document: Document, lemmer: &Lemmer) {
-    for (token, _) in document.index {
-        tokenize_string(token, lemmer);
+pub fn tokenize_document(document: &Document, lemmer: &Lemmer) -> HashMap<String, HashSet<usize>> {
+    let mut map: HashMap<String, HashSet<usize>> = HashMap::new();
+    for (token, positions) in document.index.clone() {
+        let lemma = tokenize_string(&token, lemmer);
+        map.insert(lemma, positions);
     }
+    return map;
 }
 
 pub fn construct_lemmer(lemmas: String, lang: String) -> Lemmer {
