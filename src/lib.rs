@@ -16,6 +16,7 @@
 
 use std::collections::{HashMap, HashSet};
 
+mod indexer;
 mod parser;
 mod tokenizer;
 mod types;
