@@ -1,4 +1,4 @@
-name = "fuse" # todo
+name = "fuse"
 main = "build/worker/shim.mjs"
 compatibility_date = "2022-01-20"
 

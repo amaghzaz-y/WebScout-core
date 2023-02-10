@@ -1,16 +1,16 @@
 use crate::tokenizer::{self, Tokenizer};
-use serde::__private::doc;
+use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
-#[derive(Clone)]
+#[derive(Serialize, Deserialize)]
 pub struct Document {
     pub id: String,
     pub lang: String,
     pub index: HashMap<String, HashSet<usize>>,
 }
 impl Document {
-    fn new(body: String, language: String) -> Document {
+    pub fn new(body: String, language: String) -> Document {
         let mut document: Document = Document {
             id: Uuid::new_v4().to_string(),
             lang: language,
@@ -45,5 +45,13 @@ impl Document {
         let tokenizer = Tokenizer::get(self.lang.to_owned());
         let map = tokenizer.tokenize_map(&self.index);
         self.index = map;
+    }
+    pub fn serialize(&self) -> Vec<u8> {
+        let bin = rmp_serde::encode::to_vec(self).unwrap();
+        return bin;
+    }
+    pub fn to_json(&self) -> String {
+        let json = serde_json::to_string_pretty(self).unwrap();
+        return json;
     }
 }

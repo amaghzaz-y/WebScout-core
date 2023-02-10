@@ -1,9 +1,9 @@
 #![allow(dead_code, unused)]
 use worker::*;
-mod document;
-mod index;
+pub mod document;
+pub mod index;
 mod query;
-mod tokenizer;
+pub mod tokenizer;
 mod utils;
 fn log_request(req: &Request) {
     console_log!(
