@@ -6,3 +6,8 @@ lemmers
 books
 output
 assets
+node_modules
+build
+dist
+Cargo.lock
+package-lock.json

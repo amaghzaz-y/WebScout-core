@@ -1,257 +1,55 @@
-#![allow(unused)]
-#![allow(dead_code)]
-#![allow(unstable_features)]
-// use crc32fast::hash;
-// use serde::{Deserialize, Serialize, __private::doc};
-// use std::{
-//     borrow::Borrow,
-//     collections::{
-//         hash_map::{self, DefaultHasher},
-//         HashMap, HashSet,
-//     },
-//     hash::Hash,
-//     ops::Add,
-//     str, vec,
-// };
+use serde_json::json;
+use worker::*;
 
-use std::collections::{HashMap, HashSet};
+mod utils;
 
-mod document;
-mod index;
-mod tokenizer;
-// #[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
-// pub struct Document {
-//     pub title: String,
-//     pub body: String,
-// }
-// #[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize, Default, Clone)]
+fn log_request(req: &Request) {
+    console_log!(
+        "{} - [{}], located at: {:?}, within: {}",
+        Date::now().to_string(),
+        req.path(),
+        req.cf().coordinates().unwrap_or_default(),
+        req.cf().region().unwrap_or_else(|| "unknown region".into())
+    );
+}
 
-// struct Token {
-//     value: String,
-// }
+#[event(fetch)]
+pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Response> {
+    log_request(&req);
 
-// #[derive(Default, Debug)]
-// pub struct IndexedToken {
-//     token: Token,
-//     index: Index,
-// }
-// #[derive(PartialEq, Eq, Debug, Serialize, Deserialize, Default, Clone)]
+    // Optionally, get more helpful error messages written to the console in the case of a panic.
+    utils::set_panic_hook();
 
-// struct Index {
-//     freq: u32,
-//     spots: HashMap<u32, u32>, // 1st value: document id, 2nd value: freq
-// }
-// #[derive(PartialEq, Eq, Debug, Serialize, Deserialize)]
+    // Optionally, use the Router to handle matching endpoints, use ":name" placeholders, or "*name"
+    // catch-alls to match on specific patterns. Alternatively, use `Router::with_data(D)` to
+    // provide arbitrary data that will be accessible in each route via the `ctx.data()` method.
+    let router = Router::new();
 
-// struct Store {
-//     dict: HashMap<Token, Index>,
-// }
-// #[derive(Debug, Serialize, Deserialize)]
-// pub struct Fuse {
-//     title: String,
-//     documents: HashMap<u32, String>, // 1st value: document name, 2nd value: document id
-//     store: Store,
-// }
-// impl Fuse {
-//     pub fn new() -> Self {
-//         Fuse {
-//             title: "WebScout LLC".to_string(),
-//             documents: HashMap::new(),
-//             store: Store {
-//                 dict: HashMap::new(),
-//             },
-//         }
-//     }
-//     pub fn add_document(&mut self, lemmer: &HashMap<String, String>, document: &mut Document) {
-//         self.documents
-//             .insert(hash(document.title.as_bytes()), document.title.to_owned());
-//         let mut tokens = self.parse_text(&mut document.body);
-//         self.transform_tokens(lemmer, &mut tokens);
-//         self.index_tokens(&tokens, document);
-//     }
-//     fn parse_text(&self, text: &mut String) -> HashMap<String, u32> {
-//         let mut tokens: HashMap<String, u32> = HashMap::default();
-//         let mut word: Vec<u8> = vec![];
-//         text.push('/'); // to mark the end of document
-//         let bin_body = text.as_bytes();
-//         for byte in bin_body.to_vec() {
-//             if byte.is_ascii_alphanumeric() {
-//                 word.push(byte);
-//             } else {
-//                 if word.len() > 1 {
-//                     let mut fword = unsafe { String::from_utf8_unchecked(word.to_owned()) };
-//                     fword.make_ascii_lowercase();
-//                     if tokens.contains_key(&fword) {
-//                         tokens.entry(fword).and_modify(|e| *e += 1);
-//                     } else {
-//                         tokens.insert(fword, 1);
-//                     }
-//                 }
-//                 word.clear();
-//             }
-//         }
-//         return tokens;
-//     }
-//     fn transform_tokens(
-//         &self,
-//         lemmer: &HashMap<String, String>,
-//         tokens: &mut HashMap<String, u32>,
-//     ) {
-//         for token in tokens.clone() {
-//             if lemmer.contains_key(&token.0) {
-//                 let lemma = lemmer.get(&token.0).unwrap();
-//                 let prev_token = tokens.remove_entry(&token.0).unwrap();
-//                 tokens.insert(lemma.to_owned(), prev_token.1);
-//             }
-//         }
-//     }
-//     fn index_tokens(&mut self, tokens: &HashMap<String, u32>, document: &Document) {
-//         for token in tokens {
-//             let mut dict = &mut self.store.dict;
-//             if dict.contains_key(&Token {
-//                 value: token.0.to_string(),
-//             }) {
-//                 dict.entry(Token {
-//                     value: token.0.to_string(),
-//                 })
-//                 .and_modify(|f| {
-//                     f.spots
-//                         .insert(hash(document.title.as_bytes()), token.1.to_owned());
-//                 });
-//             } else {
-//                 dict.insert(
-//                     Token {
-//                         value: token.0.to_string(),
-//                     },
-//                     Index {
-//                         freq: token.1.to_owned(),
-//                         spots: HashMap::from([(
-//                             hash(document.title.as_bytes()),
-//                             token.1.to_owned(),
-//                         )]),
-//                     },
-//                 );
-//             }
-//             dict.entry(Token {
-//                 value: token.0.to_string(),
-//             })
-//             .and_modify(|f| {
-//                 let mut freq = 0;
-//                 for key in f.spots.clone() {
-//                     freq += key.1;
-//                 }
-//                 f.freq = freq;
-//             });
-//         }
-//     }
+    // Add as many routes as your Worker needs! Each route will get a `Request` for handling HTTP
+    // functionality and a `RouteContext` which you can use to  and get route parameters and
+    // Environment bindings like KV Stores, Durable Objects, Secrets, and Variables.
+    router
+        .get("/", |_, _| Response::ok("Hello from Workers!"))
+        .post_async("/form/:field", |mut req, ctx| async move {
+            if let Some(name) = ctx.param("field") {
+                let form = req.form_data().await?;
+                match form.get(name) {
+                    Some(FormEntry::Field(value)) => {
+                        return Response::from_json(&json!({ name: value }))
+                    }
+                    Some(FormEntry::File(_)) => {
+                        return Response::error("`field` param in form shouldn't be a File", 422);
+                    }
+                    None => return Response::error("Bad Request", 400),
+                }
+            }
 
-//     fn query(&self, tokens: &Vec<String>) -> Vec<IndexedToken> {
-//         let mut result: Vec<IndexedToken> = vec![];
-//         for token in tokens {
-//             let key = &Token {
-//                 value: token.to_owned(),
-//             };
-//             if self.store.dict.contains_key(key) {
-//                 let pair = self.store.dict.get_key_value(key).unwrap();
-//                 let idxtoken = IndexedToken {
-//                     token: pair.0.to_owned(),
-//                     index: pair.1.to_owned(),
-//                 };
-//                 result.push(idxtoken)
-//             }
-//         }
-//         return result;
-//     }
-//     fn raw_to_vec(&self, query: &mut String) -> Vec<String> {
-//         query.push('/');
-//         let mut word: Vec<u8> = vec![];
-//         let mut tokens: Vec<String> = vec![];
-//         let query = query.as_bytes().to_vec();
-//         for char in query {
-//             if char.is_ascii_alphanumeric() {
-//                 word.push(char);
-//             } else {
-//                 if word.len() > 1 {
-//                     let mut fword = unsafe { String::from_utf8(word.to_owned()).unwrap() };
-//                     fword.make_ascii_lowercase();
-//                     tokens.push(fword);
-//                 }
-//                 word.clear();
-//             }
-//         }
-//         return tokens;
-//     }
-//     fn tokenize_search(
-//         &self,
-//         search: Vec<String>,
-//         lemmer: &HashMap<String, String>,
-//     ) -> Vec<String> {
-//         let mut tokens: Vec<String> = vec![];
-//         for mut key in search {
-//             if lemmer.contains_key(&key) {
-//                 let lemma = lemmer.get(&key).unwrap().to_owned();
-//                 tokens.push(lemma);
-//             } else {
-//                 tokens.push(key);
-//             }
-//         }
-//         tokens.sort();
-//         tokens.dedup();
-//         return tokens;
-//     }
-//     fn evaluate_query(&self, tokens: &Vec<IndexedToken>) -> Vec<(u32, f32)> {
-//         let mut documents: HashMap<u32, HashSet<(String, u32, u32)>> = HashMap::default();
-//         for token in tokens {
-//             for doc in &token.index.spots {
-//                 if documents.contains_key(doc.0) {
-//                     documents.entry(doc.0.to_owned()).or_default().insert((
-//                         token.token.value.to_owned(),
-//                         doc.1.to_owned(),
-//                         token.index.freq.to_owned(),
-//                     ));
-//                 } else {
-//                     documents.insert(
-//                         doc.0.to_owned(),
-//                         HashSet::from([(
-//                             token.token.value.to_owned(),
-//                             doc.1.to_owned(),
-//                             token.index.freq.to_owned(),
-//                         )]),
-//                     );
-//                 }
-//             }
-//         }
-//         let mut scores: Vec<(u32, f32)> = vec![];
-//         for doc in &documents {
-//             let mut word_freq_ratio: f32 = 0.0;
-//             for token in doc.1 {
-//                 word_freq_ratio += token.1 as f32 / token.2 as f32;
-//             }
-//             let query_ratio: f32 = (doc.1.len() as f32 / tokens.len() as f32);
-//             let total_word_freq_ratio = word_freq_ratio / (tokens.len() as f32);
-//             let score = query_ratio * total_word_freq_ratio;
-//             scores.push((doc.0.to_owned(), (score * 100.0)));
-//         }
-//         scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-//         return scores;
-//     }
-//     pub fn search(&self, search: &'static str, lemmer: &HashMap<String, String>) {
-//         let mut tokens = self.raw_to_vec(&mut search.to_string());
-//         tokens = self.tokenize_search(tokens, lemmer);
-//         let query = self.query(&tokens);
-//         let scores = self.evaluate_query(&query);
-//         for score in scores {
-//             let doc_name = self.documents.get(&score.0).unwrap();
-//             println!("document: {:?}", doc_name);
-//             println!("score: {:?}", score.1.ceil());
-//         }
-//     }
-//     pub fn from_binary(data: Vec<u8>) -> Fuse {
-//         let ws: Fuse = bincode::deserialize(&data).unwrap();
-//         return ws;
-//     }
-//     pub fn from_pack(data: Vec<u8>) -> Fuse {
-//         let ws: Fuse = rmp_serde::decode::from_slice(&data).unwrap();
-//         return ws;
-//     }
-// }
+            Response::error("Bad Request", 400)
+        })
+        .get("/worker-version", |_, ctx| {
+            let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
+            Response::ok(version)
+        })
+        .run(req, env)
+        .await
+}
