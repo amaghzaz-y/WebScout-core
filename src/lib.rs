@@ -16,11 +16,10 @@
 
 use std::collections::{HashMap, HashSet};
 
-mod indexer;
-mod parser;
+mod document;
+mod index;
 mod tokenizer;
 mod types;
-
 // #[derive(PartialEq, Eq, Debug, Hash, Serialize, Deserialize)]
 // pub struct Document {
 //     pub title: String,
