@@ -2,11 +2,12 @@ use crate::tokenizer::{self, Tokenizer};
 use serde::__private::doc;
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
+
 #[derive(Clone)]
-struct Document {
-    id: String,
-    lang: String,
-    index: HashMap<String, HashSet<usize>>,
+pub struct Document {
+    pub id: String,
+    pub lang: String,
+    pub index: HashMap<String, HashSet<usize>>,
 }
 impl Document {
     fn new(body: String, language: String) -> Document {
@@ -16,7 +17,7 @@ impl Document {
             index: HashMap::new(),
         };
         document.index_string(body);
-        document.transform();
+        document.tokenize();
         return document;
     }
     fn index_string(&mut self, mut body: String) {
@@ -40,7 +41,7 @@ impl Document {
             }
         }
     }
-    fn transform(&mut self) {
+    fn tokenize(&mut self) {
         let tokenizer = Tokenizer::get(self.lang.to_owned());
         let map = tokenizer.tokenize_map(&self.index);
         self.index = map;
