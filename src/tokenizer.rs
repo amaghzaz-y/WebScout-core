@@ -10,13 +10,13 @@ pub struct Tokenizer {
     pub tokens: HashMap<String, String>,
 }
 impl Tokenizer {
-    pub fn new(lang: String) -> Tokenizer {
+    pub fn new(lang: &String) -> Tokenizer {
         Tokenizer {
-            lang: lang,
+            lang: lang.to_owned(),
             tokens: HashMap::new(),
         }
     }
-    pub fn get(lang: String) -> Tokenizer {
+    pub fn get(lang: &String) -> Tokenizer {
         let path = format!("packs/lang/{:}.pack", lang.to_lowercase());
         let bin = fs::read(path).unwrap();
         let tokenizer: Tokenizer = rmp_serde::from_slice(&bin).unwrap();
@@ -43,7 +43,7 @@ impl Tokenizer {
         }
         return map;
     }
-    pub fn from_text(text: String, lang: String) -> Tokenizer {
+    pub fn from_text(text: &String, lang: &String) -> Tokenizer {
         let mut map: HashMap<String, String> = HashMap::new();
         for mut line in text.lines() {
             let lemma: Vec<&str> = line.split_whitespace().collect();
@@ -52,7 +52,7 @@ impl Tokenizer {
             }
         }
         return Tokenizer {
-            lang: lang,
+            lang: lang.to_owned(),
             tokens: map,
         };
     }

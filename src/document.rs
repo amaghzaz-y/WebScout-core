@@ -42,7 +42,7 @@ impl Document {
         }
     }
     fn tokenize(&mut self) {
-        let tokenizer = Tokenizer::get(self.lang.to_owned());
+        let tokenizer = Tokenizer::get(&self.lang);
         let map = tokenizer.tokenize_map(&self.index);
         self.index = map;
     }

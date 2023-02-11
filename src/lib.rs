@@ -2,7 +2,7 @@
 use worker::*;
 pub mod document;
 pub mod index;
-mod query;
+pub mod query;
 pub mod tokenizer;
 mod utils;
 fn log_request(req: &Request) {
