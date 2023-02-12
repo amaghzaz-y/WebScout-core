@@ -1,20 +1,23 @@
 use crate::tokenizer::{self, Tokenizer};
+use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
 use uuid::Uuid;
 
 #[derive(Serialize, Deserialize)]
 pub struct Document {
-    pub id: String,
+    pub id: u32,
     pub lang: String,
     pub index: HashMap<String, HashSet<usize>>,
+    pub count: usize,
 }
 impl Document {
-    pub fn new(body: String, language: String) -> Document {
+    pub fn new(name: String, body: String, language: String) -> Document {
         let mut document: Document = Document {
-            id: Uuid::new_v4().to_string(),
+            id: hash(name.as_bytes()),
             lang: language,
             index: HashMap::new(),
+            count: 0,
         };
         document.index_string(body);
         document.tokenize();
@@ -40,6 +43,7 @@ impl Document {
                 chars.clear();
             }
         }
+        self.count = count;
     }
     fn tokenize(&mut self) {
         let tokenizer = Tokenizer::get(&self.lang);
