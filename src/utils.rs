@@ -10,3 +10,12 @@ cfg_if! {
         pub fn set_panic_hook() {}
     }
 }
+pub fn mean(numbers: &[f32]) -> f32 {
+    numbers.iter().sum::<f32>() / numbers.len() as f32
+}
+
+pub fn standard_deviation(numbers: &[f32]) -> f32 {
+    let mean = mean(numbers);
+    let deviation_squared = numbers.iter().map(|&x| (x - mean).powf(2.0)).sum::<f32>();
+    (deviation_squared / (numbers.len() - 1) as f32).sqrt()
+}

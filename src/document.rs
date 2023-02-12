@@ -1,14 +1,22 @@
 use crate::tokenizer::{self, Tokenizer};
+use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
-use uuid::Uuid;
-
 #[derive(Serialize, Deserialize)]
+
+pub struct Statistics {
+    frequency: usize,
+    average: f32,
+    deviation: f32,
+}
+#[derive(Serialize, Deserialize)]
+
 pub struct Document {
     pub id: u32,
     pub lang: String,
-    pub index: HashMap<String, HashSet<usize>>,
+    // Map? Token -> (freq, mean, deviation)
+    pub index: HashMap<String, Statistics>,
     pub count: usize,
 }
 impl Document {
@@ -19,13 +27,14 @@ impl Document {
             index: HashMap::new(),
             count: 0,
         };
-        document.index_string(body);
-        document.tokenize();
+        let mut map = document.index_string(body);
+        map = document.tokenize(map);
         return document;
     }
-    fn index_string(&mut self, mut body: String) {
+    fn index_string(&mut self, mut body: String) -> HashMap<String, HashSet<usize>> {
         let mut chars: Vec<u8> = vec![];
         let mut count: usize = 0;
+        let mut map: HashMap<String, HashSet<usize>> = HashMap::new();
         body.push('/'); // to mark the end of document
         for char in body.as_bytes() {
             if char.is_ascii_alphanumeric() {
@@ -34,21 +43,37 @@ impl Document {
                 if chars.len() > 1 {
                     let mut word = String::from_utf8(chars.to_owned()).unwrap();
                     word.make_ascii_lowercase();
-                    self.index
-                        .entry(word)
-                        .or_insert(HashSet::from([count]))
-                        .insert(count);
+                    map.entry(word)
+                        .or_insert(HashSet::from([count.to_owned()]))
+                        .insert(count.to_owned());
                 }
                 count += 1;
                 chars.clear();
             }
         }
         self.count = count;
+        return map;
     }
-    fn tokenize(&mut self) {
+    fn tokenize(
+        &self,
+        mut map: HashMap<String, HashSet<usize>>,
+    ) -> HashMap<String, HashSet<usize>> {
         let tokenizer = Tokenizer::get(&self.lang);
-        let map = tokenizer.tokenize_map(&self.index);
-        self.index = map;
+        map = tokenizer.tokenize_map(&map);
+        return map;
+    }
+
+    fn transform_map(&mut self, map: HashMap<String, HashSet<usize>>) {
+        let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
+        for (token, positions) in map {
+            let pos_vec: Vec<f32> = positions.into_iter().map(|x| x as f32).collect();
+            let stats = Statistics {
+                frequency: pos_vec.len(),
+                average: mean(&pos_vec),
+                deviation: standard_deviation(&pos_vec),
+            };
+            self.index.insert(token, stats);
+        }
     }
     pub fn serialize(&self) -> Vec<u8> {
         let bin = rmp_serde::encode::to_vec(self).unwrap();
