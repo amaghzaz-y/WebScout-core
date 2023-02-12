@@ -1,8 +1,12 @@
-use std::collections::{HashMap, HashSet};
-
+use itertools::Itertools;
 use serde::__private::doc;
+use std::collections::{HashMap, HashSet};
+use std::hash::Hash;
+use std::iter::FlatMap;
+use std::thread::Result;
 
 use crate::{
+    document::Statistics,
     index::Index,
     tokenizer::{self, Tokenizer},
 };
@@ -11,64 +15,59 @@ pub struct Document {
     tokens: Vec<String>,
     score: usize,
 }
+#[derive(Debug, Clone)]
 pub struct Query {
     index: Index,
     lang: String,
-    search: String,
+    pub search: String,
     tokens: Vec<String>,
-    filter: HashMap<String, HashMap<u32, HashSet<usize>>>,
-    result: HashMap<u32, HashMap<String, Vec<usize>>>,
+    filter: HashMap<String, HashMap<u32, Statistics>>,
+    result: HashMap<u32, Vec<(String, Statistics)>>,
 }
 
 impl Query {
     pub fn new(index: Index, search: String, lang: String) -> Query {
-        Query {
+        let mut query = Query {
             index: index,
             lang: lang,
             search: search,
             tokens: vec![],
             filter: HashMap::new(),
             result: HashMap::new(),
-        }
+        };
+        query.tokenize_query();
+        query.filter_tokens();
+        query.transform();
+        return query;
     }
     fn tokenize_query(&mut self) {
         let tokenizer = Tokenizer::get(&self.lang);
-        for token in self.search.split_ascii_whitespace() {
-            let lemma = tokenizer.transform_token(&token.to_owned());
-            self.tokens.push(lemma);
-        }
+        self.search
+            .split_ascii_whitespace()
+            .map(|token| tokenizer.transform_token(&token.to_ascii_lowercase()))
+            .for_each(|lemma| {
+                self.tokens.push(lemma);
+            });
     }
     fn filter_tokens(&mut self) {
-        for token in self.tokens.iter() {
-            let keys = self.index.map.get(token);
-            if keys.is_some() {
-                self.filter.entry(token.to_owned());
-            }
-        }
+        self.tokens
+            .iter()
+            .filter_map(|token| self.index.map.get(token).map(|map| (token, map)))
+            .for_each(|(token, map)| {
+                self.filter
+                    .entry(token.to_owned())
+                    .or_insert(map.to_owned());
+            });
     }
-    pub fn normalize(&mut self) {
-        let mut ndata: HashSet<(String, String, usize, Vec<usize>)> = HashSet::new();
-        self.tokenize_query();
-        self.filter_tokens();
-        for key in self.filter.iter() {
-            let token = key.0.to_owned();
-            let map = key.1.to_owned();
-            for doc in map {
-                let mut positions: Vec<usize> = doc.1.into_iter().collect();
-                positions.sort_unstable_by(|a, b| a.cmp(b));
-                self.result
-                    .entry(doc.0)
-                    .or_insert(HashMap::from([(token.to_owned(), positions.to_owned())]))
-                    .insert(token.to_owned(), positions);
-            }
-        }
-    }
-    fn word_distance(tokens: Vec<(String, Vec<usize>)>) {
-        for token in tokens {}
-    }
-    pub fn evaluate(&self) {
-        for document in &self.result {
-            let tokens: Vec<_> = document.1.to_owned().into_iter().collect();
-        }
+    fn transform(&mut self) {
+        let map: HashMap<String, HashMap<u32, Statistics>> = self.filter.clone();
+        self.result = map
+            .into_iter()
+            .flat_map(|(k, v)| {
+                v.into_iter()
+                    .map(move |(key, value)| (key, (k.to_owned(), value)))
+            })
+            .into_group_map();
+        println!("transform : {:?}", self.result);
     }
 }

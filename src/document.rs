@@ -3,14 +3,14 @@ use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 
 pub struct Statistics {
     frequency: usize,
-    average: f32,
-    deviation: f32,
+    average: usize,
+    deviation: usize,
 }
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct Document {
     pub id: u32,
@@ -55,6 +55,7 @@ impl Document {
         self.count = count;
         return map;
     }
+
     fn tokenize(
         &self,
         mut map: HashMap<String, HashSet<usize>>,
@@ -70,8 +71,8 @@ impl Document {
             let pos_vec: Vec<f32> = positions.into_iter().map(|x| x as f32).collect();
             let stats = Statistics {
                 frequency: pos_vec.len(),
-                average: mean(&pos_vec),
-                deviation: standard_deviation(&pos_vec),
+                average: mean(&pos_vec) as usize,
+                deviation: standard_deviation(&pos_vec) as usize,
             };
             self.index.insert(token, stats);
         }

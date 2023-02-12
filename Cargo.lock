@@ -320,6 +320,7 @@ dependencies = [
  "flexbuffers",
  "getrandom",
  "gnuplot",
+ "itertools",
  "rmp-serde",
  "serde",
  "serde_json",

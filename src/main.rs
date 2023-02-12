@@ -3,6 +3,7 @@ use flate2::{write::GzEncoder, Compression};
 use fuse::{
     document::Document,
     index::Index,
+    query::Query,
     tokenizer::{self, Tokenizer},
 };
 use gnuplot::{Axes, AxesCommon, Caption, Figure, Graph};
@@ -33,12 +34,11 @@ fn serialize_docs() {
     cmp.write_all(&idx.serialize());
     let bin = cmp.finish().unwrap();
     fs::write("packs/index/index.f2", bin);
-    // fs::write("packs/index/index.pack", idx.serialize());
+    fs::write("packs/index/index.pack", idx.serialize());
 }
 fn main() {
-    // let bin = fs::read("packs/index/index.pack").unwrap();
-    // let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
-    // let mut query = Query::new(index, "mother".to_string(), "en".to_string());
-    // query.normalize();
-    serialize_docs();
+    //serialize_docs();
+    let bin = fs::read("packs/index/index.pack").unwrap();
+    let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
+    let mut query = Query::new(index, "lamb Dogs".to_string(), "en".to_string());
 }

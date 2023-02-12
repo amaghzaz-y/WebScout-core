@@ -8,7 +8,7 @@ use std::{
 };
 use uuid::Uuid;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Index {
     pub id: String,
     pub documents: HashSet<u32>,
