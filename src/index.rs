@@ -1,9 +1,10 @@
-use crate::document::{self, Document};
+use crate::document::{self, Document, Statistics};
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::{
     any::Any,
     collections::{HashMap, HashSet},
+    hash::Hash,
 };
 use uuid::Uuid;
 
@@ -12,7 +13,7 @@ pub struct Index {
     pub id: String,
     pub documents: HashSet<u32>,
     // Map? Token -> Map? Document -> (freq, mean, deviation)
-    pub map: HashMap<String, HashMap<u32, (usize, usize, usize)>>,
+    pub map: HashMap<String, HashMap<u32, Statistics>>,
 }
 impl Index {
     pub fn new() -> Index {
@@ -25,7 +26,13 @@ impl Index {
     pub fn add_document(&mut self, document: &Document) {
         self.documents.insert(document.id.to_owned());
         for (token, positions) in &document.index {
-            self.map.entry(token.to_owned());
+            let doc_name = document.id;
+            let stats: Statistics = positions.to_owned();
+            let map = HashMap::from([(doc_name, stats)]);
+            self.map
+                .entry(token.to_owned())
+                .or_insert(map)
+                .insert(doc_name, stats);
         }
     }
     fn from(bin: &Vec<u8>) -> Index {

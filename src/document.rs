@@ -3,7 +3,7 @@ use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Copy)]
 
 pub struct Statistics {
     frequency: usize,
@@ -29,6 +29,7 @@ impl Document {
         };
         let mut map = document.index_string(body);
         map = document.tokenize(map);
+        document.transform_map(map);
         return document;
     }
     fn index_string(&mut self, mut body: String) -> HashMap<String, HashSet<usize>> {
