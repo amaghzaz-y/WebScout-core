@@ -1,10 +1,12 @@
 #![allow(dead_code, unused)]
-use worker::*;
 pub mod document;
 pub mod index;
 pub mod query;
 pub mod tokenizer;
 mod utils;
+
+use worker::*;
+
 fn log_request(req: &Request) {
     console_log!(
         "{} - [{}], located at: {:?}, within: {}",
@@ -21,7 +23,11 @@ pub async fn main(req: Request, env: Env, _ctx: worker::Context) -> Result<Respo
     utils::set_panic_hook();
     let router = Router::new();
     router
-        .get("/", |_, _| Response::ok("Hello World"))
+        .get("/", |_, _| Response::ok("Hello from Workers!"))
+        .get("/worker-version", |_, ctx| {
+            let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
+            Response::ok(version)
+        })
         .run(req, env)
         .await
 }

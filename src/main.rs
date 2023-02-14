@@ -1,18 +1,16 @@
 #![allow(dead_code, unused)]
 use flate2::{write::GzEncoder, Compression};
-use fuse::{
-    document::Document,
-    index::Index,
-    query::Query,
-    tokenizer::{self, Tokenizer},
-};
-use gnuplot::{Axes, AxesCommon, Caption, Figure, Graph};
 use std::{
     fs,
     io::{read_to_string, Write},
     path::{Path, PathBuf},
 };
-
+use webscout::{
+    document::Document,
+    index::Index,
+    query::Query,
+    tokenizer::{self, Tokenizer},
+};
 fn serialize_docs() {
     let dir = fs::read_dir("assets/books").unwrap();
     let mut idx: Index = Index::new();
@@ -36,9 +34,11 @@ fn serialize_docs() {
     fs::write("packs/index/index.f2", bin);
     fs::write("packs/index/index.pack", idx.serialize());
 }
+
 fn main() {
     //serialize_docs();
-    let bin = fs::read("packs/index/index.pack").unwrap();
-    let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
-    let mut query = Query::new(index, "lamb Dogs".to_string(), "en".to_string());
+    // let bin = fs::read("packs/index/index.pack").unwrap();
+    // let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
+    // let mut query = Query::new(index, "MARY ROBERTS RINEHART".to_string(), "en".to_string());
+    // query.evaluate();
 }

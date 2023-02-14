@@ -5,11 +5,28 @@ use std::hash::Hash;
 use std::iter::FlatMap;
 use std::thread::Result;
 
+use crate::utils::{mean, standard_deviation};
 use crate::{
     document::Statistics,
     index::Index,
     tokenizer::{self, Tokenizer},
 };
+#[derive(Debug, Clone)]
+
+pub struct DocStat {
+    pub mean_of_means: f32,
+    pub mean_of_deviations: f32,
+    pub mean_of_frequencies: f32,
+    pub deviation_of_means: f32,
+    pub deviation_of_deviations: f32,
+}
+pub struct QueryStats {
+    pub means: Vec<usize>,
+    pub deviations: Vec<usize>,
+    pub frequencies: Vec<usize>,
+}
+#[derive(Debug, Clone)]
+
 pub struct Document {
     id: String,
     tokens: Vec<String>,
@@ -68,6 +85,60 @@ impl Query {
                     .map(move |(key, value)| (key, (k.to_owned(), value)))
             })
             .into_group_map();
-        println!("transform : {:?}", self.result);
+    }
+    fn normalize(&self) -> HashMap<u32, QueryStats> {
+        let mut ndata: HashMap<u32, QueryStats> = HashMap::new();
+        for (key, value) in &self.result {
+            let mut means = Vec::new();
+            let mut deviations = Vec::new();
+            let mut freqs = Vec::new();
+            for (_, s) in value.iter() {
+                means.push(s.average);
+                deviations.push(s.deviation);
+                freqs.push(s.frequency);
+            }
+            ndata.insert(
+                key.to_owned(),
+                QueryStats {
+                    means: means,
+                    deviations: deviations,
+                    frequencies: freqs,
+                },
+            );
+        }
+        return ndata;
+    }
+    pub fn evaluate(self) {
+        let query = self.normalize();
+        let mut doc_stat: HashMap<u32, DocStat> = HashMap::new();
+        for (d, stats) in query {
+            let means: &[f32] = &stats.means.iter().map(|x| *x as f32).collect::<Vec<f32>>();
+            let deviations: &[f32] = &stats
+                .deviations
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<f32>>();
+            let frequencies: &[f32] = &stats
+                .frequencies
+                .iter()
+                .map(|x| *x as f32)
+                .collect::<Vec<f32>>();
+            let mean_of_means = mean(means);
+            let mean_of_freqs = mean(frequencies);
+            let mean_of_deviations = mean(deviations);
+            let deviation_of_means = standard_deviation(means);
+            let deviation_of_deviations = standard_deviation(deviations);
+            doc_stat.insert(
+                d,
+                DocStat {
+                    mean_of_means: mean_of_means,
+                    mean_of_deviations: mean_of_deviations,
+                    mean_of_frequencies: mean_of_freqs,
+                    deviation_of_means: deviation_of_means,
+                    deviation_of_deviations: deviation_of_deviations,
+                },
+            );
+        }
+        println!("{:?}", doc_stat)
     }
 }

@@ -2,7 +2,6 @@
 /data
 *.bin
 *.yml
-lemmers
 books
 output
 assets
@@ -12,3 +11,5 @@ dist
 Cargo.lock
 package-lock.json
 packs
+lemmers
+/src/main.rs

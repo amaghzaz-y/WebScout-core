@@ -6,18 +6,18 @@ use std::collections::{HashMap, HashSet};
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 
 pub struct Statistics {
-    frequency: usize,
-    average: usize,
-    deviation: usize,
+    pub frequency: usize,
+    pub average: usize,
+    pub deviation: usize,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct Document {
     pub id: u32,
     pub lang: String,
+    pub count: usize,
     // Map? Token -> (freq, mean, deviation)
     pub index: HashMap<String, Statistics>,
-    pub count: usize,
 }
 impl Document {
     pub fn new(name: String, body: String, language: String) -> Document {

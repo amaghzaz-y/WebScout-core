@@ -309,26 +309,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fuse"
-version = "0.1.0"
-dependencies = [
- "cfg-if 0.1.10",
- "console_error_panic_hook",
- "crc32fast",
- "criterion",
- "flate2",
- "flexbuffers",
- "getrandom",
- "gnuplot",
- "itertools",
- "rmp-serde",
- "serde",
- "serde_json",
- "uuid",
- "worker",
-]
-
-[[package]]
 name = "futures"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -428,15 +408,6 @@ dependencies = [
  "libc",
  "wasi",
  "wasm-bindgen",
-]
-
-[[package]]
-name = "gnuplot"
-version = "0.0.37"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8de437277a7ec10de5f34e3147c7da4c6d8b279c5d8ae1e33e842fd9432bb0f3"
-dependencies = [
- "byteorder",
 ]
 
 [[package]]
@@ -1203,6 +1174,25 @@ checksum = "38eb105f1c59d9eaa6b5cdc92b859d85b926e82cb2e0945cd0c9259faa6fe9fb"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webscout"
+version = "0.1.0"
+dependencies = [
+ "cfg-if 0.1.10",
+ "console_error_panic_hook",
+ "crc32fast",
+ "criterion",
+ "flate2",
+ "flexbuffers",
+ "getrandom",
+ "itertools",
+ "rmp-serde",
+ "serde",
+ "serde_json",
+ "uuid",
+ "worker",
 ]
 
 [[package]]

@@ -1,6 +1,11 @@
-name = "fuse"
+name = "webscout"
 main = "build/worker/shim.mjs"
 compatibility_date = "2022-01-20"
+
+kv_namespaces = [
+  { binding = "LANG-PACKS", id = "LPACKS" }
+]
+
 
 [vars]
 WORKERS_RS_VERSION = "0.0.9"
