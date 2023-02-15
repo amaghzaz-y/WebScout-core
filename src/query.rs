@@ -58,7 +58,7 @@ impl Query {
         return query;
     }
     fn tokenize_query(&mut self) {
-        let tokenizer = Tokenizer::get(&self.lang);
+        let tokenizer = Tokenizer::new("en");
         self.search
             .split_ascii_whitespace()
             .map(|token| tokenizer.transform_token(&token.to_ascii_lowercase()))

@@ -60,7 +60,7 @@ impl Document {
         &self,
         mut map: HashMap<String, HashSet<usize>>,
     ) -> HashMap<String, HashSet<usize>> {
-        let tokenizer = Tokenizer::get(&self.lang);
+        let tokenizer = Tokenizer::new(&self.lang);
         map = tokenizer.tokenize_map(&map);
         return map;
     }

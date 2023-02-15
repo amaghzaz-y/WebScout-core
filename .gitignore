@@ -10,5 +10,6 @@ build
 dist
 Cargo.lock
 package-lock.json
-packs
 lemmers
+langs
+packs
