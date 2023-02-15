@@ -13,19 +13,19 @@ pub fn benchmark_tokenizer(c: &mut Criterion) {
     group.bench_function("Query", |b| {
         b.iter(|| tokenizer.filter(&["hom", "gir"], &[]))
     });
-    // group.bench_function("contruct en pack", |b| {
-    //     b.iter(|| Tokenizer::new("en").construct_tokens(&lemmer));
-    // });
-    // group.bench_function("pack Deserialize", |b| {
-    //     b.iter(|| Tokenizer::from_pack(&pack));
-    // });
-    // group.bench_function("pack serialize", |b| {
-    //     b.iter(|| tokenizer.to_pack());
-    // });
+    group.bench_function("contruct en pack", |b| {
+        b.iter(|| Tokenizer::new("en").construct_tokens(&lemmer));
+    });
+    group.bench_function("pack Deserialize", |b| {
+        b.iter(|| Tokenizer::from_pack(&pack));
+    });
+    group.bench_function("pack serialize", |b| {
+        b.iter(|| tokenizer.to_pack());
+    });
 }
 criterion_group! {
   name = benches;
-  config = Criterion::default().measurement_time(Duration::from_secs(20));
+  config = Criterion::default().measurement_time(Duration::from_secs(12));
   targets = benchmark_tokenizer
 }
 

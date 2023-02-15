@@ -10,7 +10,6 @@ pub struct Tokenizer {
     pub lang: String,
     pub tokens: HashSet<String>,
 }
-
 impl Tokenizer {
     pub fn new(lang: &str) -> Tokenizer {
         Tokenizer {
@@ -64,9 +63,7 @@ impl Tokenizer {
             .sorted_by(|(a), b| b.1.total_cmp(&a.1))
             .nth(0)
     }
-    pub fn auto_eval(&self, entry: &str) {
-        
-    }
+    pub fn auto_eval(&self, entry: &str) {}
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()
