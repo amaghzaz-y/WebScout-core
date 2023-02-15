@@ -2,14 +2,8 @@
 /data
 *.bin
 *.yml
-books
 output
 assets
-node_modules
 build
 dist
 Cargo.lock
-package-lock.json
-lemmers
-langs
-packs
