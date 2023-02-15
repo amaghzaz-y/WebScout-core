@@ -1,7 +1,7 @@
 #![allow(dead_code, unused)]
 use flate2::{write::GzEncoder, Compression};
 use std::{
-    collections::Bound,
+    collections::{Bound, HashSet},
     fs,
     io::{read_to_string, Write},
     path::{Path, PathBuf},
@@ -53,9 +53,10 @@ fn main() {
     //serialize_lemmers();
     let bin = fs::read("packs/en.pack").unwrap();
     let mut tokenizer = Tokenizer::from_pack(&bin);
-    let tokens = tokenizer.filter(&["hom"], &[]);
-    let token = tokenizer.eval("homela", &tokens);
-    println!("{:?}", token);
+    // let tokens = tokenizer.filter(&["hom"], &[]);
+    // let token = tokenizer.eval("homela", &tokens);
+    let tokens = tokenizer.auto_tokenize("eplephant");
+    println!("{:?}", tokens);
     //serialize_docs();
     // let bin = fs::read("packs/index/index.pack").unwrap();
     // let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();

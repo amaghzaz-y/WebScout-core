@@ -38,18 +38,11 @@ impl Tokenizer {
         }
         return map;
     }
-    pub fn filter(&self, prefix: &[&str], suffix: &[&str]) -> HashSet<String> {
-        let prefix_set: HashSet<_> = prefix.iter().collect();
-        let suffix_set: HashSet<_> = suffix.iter().collect();
+    pub fn filter(&self, prefix_suffix: &HashSet<(String, String)>) -> HashSet<String> {
         let mut tokens: HashSet<String> = HashSet::new();
         for token in &self.tokens {
-            for pref in prefix_set.iter() {
-                if token.starts_with(*pref) {
-                    tokens.insert(token.to_owned());
-                }
-            }
-            for suff in suffix_set.iter() {
-                if token.ends_with(*suff) {
+            for (pref, suff) in prefix_suffix.iter() {
+                if token.starts_with(pref) || token.ends_with(suff) {
                     tokens.insert(token.to_owned());
                 }
             }
@@ -63,7 +56,43 @@ impl Tokenizer {
             .sorted_by(|(a), b| b.1.total_cmp(&a.1))
             .nth(0)
     }
-    pub fn auto_eval(&self, entry: &str) {}
+    pub fn get_prefix_suffix(
+        &self,
+        words: &HashSet<String>,
+        mut limit: (usize, usize),
+    ) -> HashSet<(String, String)> {
+        words
+            .iter()
+            .map(|token| {
+                if limit.0 > token.len() {
+                    limit.0 = token.len();
+                }
+                if limit.1 > token.len() {
+                    limit.1 = token.len();
+                }
+                (
+                    token.to_owned().split_at(limit.0).0.to_string(),
+                    token
+                        .to_owned()
+                        .split_at(token.len() - limit.1)
+                        .1
+                        .to_string(),
+                )
+            })
+            .collect()
+    }
+    pub fn auto_tokenize(&self, text: &str) -> Vec<Option<(String, f64)>> {
+        let words: HashSet<String> = text
+            .split_whitespace()
+            .map(|token| token.to_lowercase())
+            .collect();
+        let prefix_suff = self.get_prefix_suffix(&words, (3, 3));
+        let filtred = self.filter(&prefix_suff);
+        words
+            .iter()
+            .map(|token| self.eval(token, &filtred))
+            .collect()
+    }
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()
