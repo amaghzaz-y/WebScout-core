@@ -7,3 +7,4 @@ assets
 build
 dist
 Cargo.lock
+temp

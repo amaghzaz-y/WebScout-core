@@ -12,7 +12,6 @@ use uuid::Uuid;
 pub struct Index {
     pub id: String,
     pub documents: HashSet<u32>,
-    // Map? Token -> Map? Document -> (freq, mean, deviation)
     pub map: HashMap<String, HashMap<u32, Weight>>,
 }
 impl Index {

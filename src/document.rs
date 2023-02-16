@@ -28,39 +28,73 @@ impl Document {
             index: HashMap::new(),
             count: 0,
         };
+        let index = document.index(&body);
+        document.transform_map(&index);
         return document;
     }
 
-    fn index_string(&mut self, mut body: &String) -> HashMap<String, Vec<usize>> {
+    pub fn index_string(&mut self, mut body: &String) -> HashMap<String, Vec<usize>> {
         body.split_whitespace()
             .enumerate()
             .map(|(pos, word)| (word.to_owned(), pos))
             .into_group_map()
     }
-
-    fn tokenize(
+    pub fn index(&self, mut body: &String) -> HashMap<String, HashSet<usize>> {
+        let tokenizer = Tokenizer::new(&self.lang);
+        let s = body
+            .split_whitespace()
+            .enumerate()
+            .map(|(pos, word)| (word.to_owned(), pos))
+            .into_group_map()
+            .iter()
+            .map(|(word, pos)| {
+                let token = tokenizer.auto_tokenize(word)[0]
+                    .as_ref()
+                    .map(|t| t.0.to_owned())
+                    .unwrap_or_else(|| word.to_owned());
+                (token, pos.to_owned())
+            })
+            .into_group_map();
+        self.convert_map_ref(&s)
+    }
+    pub fn tokenize(
         &self,
-        mut map: &HashMap<String, HashSet<usize>>,
+        mut map: &HashMap<String, Vec<usize>>,
     ) -> HashMap<String, HashSet<usize>> {
         let tokenizer = Tokenizer::new(&self.lang);
         let s = map
             .into_iter()
-            .map(|(token, pos)| {
-                (
-                    tokenizer.auto_tokenize(token)[0]
-                        .as_ref()
-                        .unwrap()
-                        .0
-                        .to_owned(),
-                    pos.to_owned(),
-                )
+            .map(|(word, pos)| {
+                let token = tokenizer.auto_tokenize(word)[0]
+                    .as_ref()
+                    .map(|t| t.0.to_owned())
+                    .unwrap_or_else(|| word.to_owned());
+                (token, pos.clone())
             })
             .into_group_map();
         return self.convert_map(s);
     }
+    fn convert_map_ref(
+        &self,
+        input_map: &HashMap<String, Vec<Vec<usize>>>,
+    ) -> HashMap<String, HashSet<usize>> {
+        let mut output_map: HashMap<String, HashSet<usize>> = HashMap::new();
+        let mut temp_set = HashSet::new();
+        for (key, value) in input_map {
+            for sub_set in value {
+                temp_set.extend(sub_set.to_owned());
+            }
+            output_map
+                .entry(key.to_string())
+                .or_insert_with(HashSet::new)
+                .extend(&temp_set);
+            temp_set.clear();
+        }
+        output_map
+    }
     fn convert_map(
         &self,
-        input_map: HashMap<String, Vec<HashSet<usize>>>,
+        input_map: HashMap<String, Vec<Vec<usize>>>,
     ) -> HashMap<String, HashSet<usize>> {
         let mut output_map: HashMap<String, HashSet<usize>> = HashMap::new();
         let mut temp_set = HashSet::new();
@@ -77,18 +111,19 @@ impl Document {
         output_map
     }
 
-    // fn transform_map(&mut self, map: HashMap<String, HashSet<usize>>) {
-    //     let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
-    //     for (token, positions) in map {
-    //         let pos_vec: Vec<f32> = positions.into_iter().map(|x| x as f32).collect();
-    //         let stats = Statistics {
-    //             frequency: pos_vec.len(),
-    //             average: mean(&pos_vec) as usize,
-    //             deviation: standard_deviation(&pos_vec) as usize,
-    //         };
-    //         self.index.insert(token, stats);
-    //     }
-    // }
+    pub fn transform_map(&mut self, map: &HashMap<String, HashSet<usize>>) {
+        let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
+        let s = map.iter().map(|(token, pos)| {
+            let pos_vec: Vec<f32> = pos.into_iter().map(|x| *x as f32).collect();
+            let weight = Weight {
+                freq: pos_vec.len() as u32,
+                mean: mean(&pos_vec),
+                devi: standard_deviation(&pos_vec),
+            };
+            (token.to_owned(), weight)
+        });
+        self.index = HashMap::from_iter(s);
+    }
 
     pub fn to_pack(&self) -> Vec<u8> {
         rmp_serde::encode::to_vec(self).unwrap()
