@@ -5,20 +5,21 @@ use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 
-pub struct Statistics {
-    pub frequency: usize,
-    pub average: usize,
-    pub deviation: usize,
+pub struct Weight {
+    pub freq: u32,
+    pub mean: f32,
+    pub devi: f32,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct Document {
     pub id: u32,
     pub lang: String,
-    pub count: usize,
+    pub count: u32,
     // Map? Token -> (freq, mean, deviation)
-    pub index: HashMap<String, Statistics>,
+    pub index: HashMap<String, Weight>,
 }
+
 impl Document {
     pub fn new(name: String, body: String, language: String) -> Document {
         let mut document: Document = Document {
@@ -32,10 +33,11 @@ impl Document {
         document.transform_map(map);
         return document;
     }
-    fn index_string(&mut self, mut body: String) -> HashMap<String, HashSet<usize>> {
+
+    fn index_string(&mut self, mut body: String) -> HashMap<String, HashSet<u32>> {
         let mut chars: Vec<u8> = vec![];
-        let mut count: usize = 0;
-        let mut map: HashMap<String, HashSet<usize>> = HashMap::new();
+        let mut count: u32 = 0;
+        let mut map: HashMap<String, HashSet<u32>> = HashMap::new();
         body.push('/'); // to mark the end of document
         for char in body.as_bytes() {
             if char.is_ascii_alphanumeric() {
@@ -77,10 +79,15 @@ impl Document {
             self.index.insert(token, stats);
         }
     }
-    pub fn serialize(&self) -> Vec<u8> {
-        let bin = rmp_serde::encode::to_vec(self).unwrap();
-        return bin;
+
+    pub fn to_pack(&self) -> Vec<u8> {
+        rmp_serde::encode::to_vec(self).unwrap()
     }
+
+    pub fn from_pack(&self, bin: &[u8]) -> Document {
+        rmp_serde::decode::from_slice(bin).unwrap()
+    }
+
     pub fn to_json(&self) -> String {
         let json = serde_json::to_string_pretty(self).unwrap();
         return json;
