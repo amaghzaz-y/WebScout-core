@@ -1,6 +1,7 @@
 use crate::tokenizer::{self, Tokenizer};
 use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -16,7 +17,6 @@ pub struct Document {
     pub id: u32,
     pub lang: String,
     pub count: u32,
-    // Map? Token -> (freq, mean, deviation)
     pub index: HashMap<String, Weight>,
 }
 
@@ -28,57 +28,67 @@ impl Document {
             index: HashMap::new(),
             count: 0,
         };
-        let mut map = document.index_string(body);
-        map = document.tokenize(map);
-        document.transform_map(map);
         return document;
     }
 
-    fn index_string(&mut self, mut body: String) -> HashMap<String, HashSet<u32>> {
-        let mut chars: Vec<u8> = vec![];
-        let mut count: u32 = 0;
-        let mut map: HashMap<String, HashSet<u32>> = HashMap::new();
-        body.push('/'); // to mark the end of document
-        for char in body.as_bytes() {
-            if char.is_ascii_alphanumeric() {
-                chars.push(*char);
-            } else {
-                if chars.len() > 1 {
-                    let mut word = String::from_utf8(chars.to_owned()).unwrap();
-                    word.make_ascii_lowercase();
-                    map.entry(word)
-                        .or_insert(HashSet::from([count.to_owned()]))
-                        .insert(count.to_owned());
-                }
-                count += 1;
-                chars.clear();
-            }
-        }
-        self.count = count;
-        return map;
+    fn index_string(&mut self, mut body: &String) -> HashMap<String, Vec<usize>> {
+        body.split_whitespace()
+            .enumerate()
+            .map(|(pos, word)| (word.to_owned(), pos))
+            .into_group_map()
     }
 
     fn tokenize(
         &self,
-        mut map: HashMap<String, HashSet<usize>>,
+        mut map: &HashMap<String, HashSet<usize>>,
     ) -> HashMap<String, HashSet<usize>> {
         let tokenizer = Tokenizer::new(&self.lang);
-        map = tokenizer.tokenize_map(&map);
-        return map;
+        let s = map
+            .into_iter()
+            .map(|(token, pos)| {
+                (
+                    tokenizer.auto_tokenize(token)[0]
+                        .as_ref()
+                        .unwrap()
+                        .0
+                        .to_owned(),
+                    pos.to_owned(),
+                )
+            })
+            .into_group_map();
+        return self.convert_map(s);
+    }
+    fn convert_map(
+        &self,
+        input_map: HashMap<String, Vec<HashSet<usize>>>,
+    ) -> HashMap<String, HashSet<usize>> {
+        let mut output_map: HashMap<String, HashSet<usize>> = HashMap::new();
+        let mut temp_set = HashSet::new();
+        for (key, value) in input_map {
+            for sub_set in value {
+                temp_set.extend(sub_set);
+            }
+            output_map
+                .entry(key)
+                .or_insert_with(HashSet::new)
+                .extend(&temp_set);
+            temp_set.clear();
+        }
+        output_map
     }
 
-    fn transform_map(&mut self, map: HashMap<String, HashSet<usize>>) {
-        let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
-        for (token, positions) in map {
-            let pos_vec: Vec<f32> = positions.into_iter().map(|x| x as f32).collect();
-            let stats = Statistics {
-                frequency: pos_vec.len(),
-                average: mean(&pos_vec) as usize,
-                deviation: standard_deviation(&pos_vec) as usize,
-            };
-            self.index.insert(token, stats);
-        }
-    }
+    // fn transform_map(&mut self, map: HashMap<String, HashSet<usize>>) {
+    //     let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
+    //     for (token, positions) in map {
+    //         let pos_vec: Vec<f32> = positions.into_iter().map(|x| x as f32).collect();
+    //         let stats = Statistics {
+    //             frequency: pos_vec.len(),
+    //             average: mean(&pos_vec) as usize,
+    //             deviation: standard_deviation(&pos_vec) as usize,
+    //         };
+    //         self.index.insert(token, stats);
+    //     }
+    // }
 
     pub fn to_pack(&self) -> Vec<u8> {
         rmp_serde::encode::to_vec(self).unwrap()

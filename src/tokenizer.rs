@@ -5,6 +5,8 @@ use std::{
     fs,
     hash::Hash,
 };
+
+use crate::document::Document;
 #[derive(Serialize, Deserialize)]
 pub struct Tokenizer {
     pub lang: String,
@@ -24,19 +26,6 @@ impl Tokenizer {
             lemma = value.unwrap().to_string();
         }
         return lemma;
-    }
-    pub fn tokenize_map(
-        &self,
-        index: &HashMap<String, HashSet<usize>>,
-    ) -> HashMap<String, HashSet<usize>> {
-        let mut map: HashMap<String, HashSet<usize>> = HashMap::new();
-        for (token, positions) in index {
-            let lemma = self.transform_token(&token);
-            map.entry(lemma)
-                .or_insert(positions.to_owned())
-                .union(positions);
-        }
-        return map;
     }
     pub fn filter(&self, prefix_suffix: &HashSet<(String, String)>) -> HashSet<String> {
         let mut tokens: HashSet<String> = HashSet::new();

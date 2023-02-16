@@ -1,4 +1,4 @@
-use crate::document::{self, Document, Statistics};
+use crate::document::{self, Document, Weight};
 use crc32fast::hash;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::{
@@ -13,7 +13,7 @@ pub struct Index {
     pub id: String,
     pub documents: HashSet<u32>,
     // Map? Token -> Map? Document -> (freq, mean, deviation)
-    pub map: HashMap<String, HashMap<u32, Statistics>>,
+    pub map: HashMap<String, HashMap<u32, Weight>>,
 }
 impl Index {
     pub fn new() -> Index {
@@ -27,7 +27,7 @@ impl Index {
         self.documents.insert(document.id.to_owned());
         for (token, positions) in &document.index {
             let doc_name = document.id;
-            let stats: Statistics = positions.to_owned();
+            let stats: Weight = positions.to_owned();
             let map = HashMap::from([(doc_name, stats)]);
             self.map
                 .entry(token.to_owned())

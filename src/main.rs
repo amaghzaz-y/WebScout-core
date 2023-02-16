@@ -9,7 +9,6 @@ use std::{
 use webscout::{
     document::Document,
     index::Index,
-    query::Query,
     tokenizer::{self, Tokenizer},
 };
 // fn serialize_docs() {
@@ -55,7 +54,7 @@ fn main() {
     let mut tokenizer = Tokenizer::from_pack(&bin);
     // let tokens = tokenizer.filter(&["hom"], &[]);
     // let token = tokenizer.eval("homela", &tokens);
-    let tokens = tokenizer.auto_tokenize("eplephant");
+    let tokens = tokenizer.auto_tokenize("big dog eat cakes");
     println!("{:?}", tokens);
     //serialize_docs();
     // let bin = fs::read("packs/index/index.pack").unwrap();

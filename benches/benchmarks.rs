@@ -2,7 +2,10 @@
 use std::{collections::HashSet, fs, time::Duration};
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use webscout::tokenizer::{self, Tokenizer};
+use webscout::{
+    document::Document,
+    tokenizer::{self, Tokenizer},
+};
 
 pub fn benchmark_tokenizer(c: &mut Criterion) {
     let mut group = c.benchmark_group("Tokenizer");
@@ -28,10 +31,18 @@ pub fn benchmark_tokenizer(c: &mut Criterion) {
     //     b.iter(|| tokenizer.to_pack());
     // });
 }
+
+pub fn benchmark_document(c: &mut Criterion) {
+    let mut group = c.benchmark_group("Document");
+    let doc = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
+    group.bench_function("Parsing", |b| {
+        b.iter(|| Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()));
+    });
+}
 criterion_group! {
   name = benches;
   config = Criterion::default().measurement_time(Duration::from_secs(12));
-  targets = benchmark_tokenizer
+  targets = benchmark_document
 }
 
 criterion_main!(benches);
