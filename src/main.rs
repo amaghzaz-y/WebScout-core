@@ -1,7 +1,7 @@
 #![allow(dead_code, unused)]
 use flate2::{write::GzEncoder, Compression};
 use std::{
-    collections::{Bound, HashSet},
+    collections::{BTreeMap, BTreeSet, Bound, HashSet},
     fs,
     io::{read_to_string, Write},
     path::{Path, PathBuf},
@@ -13,19 +13,22 @@ use webscout::{
 };
 fn serialize_docs() {
     let dir = fs::read_dir("assets/books").unwrap();
+    let bin = fs::read("packs/en.pack").unwrap();
+    let mut tokenizer = Tokenizer::from_pack(&bin);
     let mut idx: Index = Index::new();
     for file in dir {
         let path = file.as_ref().unwrap().path().to_owned();
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
         let body = fs::read_to_string(path).unwrap();
         println!("indexing {:}", name);
-        let doc: Document = Document::new(name.to_owned(), body, "en".to_string());
+        let doc: Document = Document::new(name.to_owned(), body, "en".to_string(), &tokenizer);
         println!("adding document {:}", name);
         idx.add_document(&doc);
         println!("serializing {:}", name);
         let content = doc.to_pack();
         println!("saving {:}", name);
         fs::write(format!("temp/docs/{}.pack", name), content);
+        fs::write(format!("temp/docs/{}.json", name), doc.to_json());
     }
     println!("saving index");
     let mut cmp = GzEncoder::new(Vec::new(), Compression::default());
@@ -33,6 +36,7 @@ fn serialize_docs() {
     let bin = cmp.finish().unwrap();
     fs::write("temp/index/index.f2", bin);
     fs::write("temp/index/index.pack", idx.serialize());
+    fs::write("temp/index/index.json", idx.to_json());
 }
 fn serialize_lemmers() {
     let dir = fs::read_dir("lemmers").unwrap();
@@ -49,16 +53,22 @@ fn serialize_lemmers() {
     }
 }
 fn main() {
-    //serialize_lemmers();
+    // //serialize_lemmers();
     // let bin = fs::read("packs/en.pack").unwrap();
     // let mut tokenizer = Tokenizer::from_pack(&bin);
-    // let tokens = tokenizer.filter(&["hom"], &[]);
-    // let token = tokenizer.eval("homela", &tokens);
-    // let tokens = tokenizer.auto_tokenize("big dog eat cakes");
-    // println!("{:?}", tokens);
+    // // // let tokens = tokenizer.filter(&["hom"], &[]);
+    // // // let token = tokenizer.eval("homela", &tokens);
+    // let tokens = tokenizer.auto_tokenize("Pooh!");
+    // let token = tokenizer
+    //     .auto_tokenize("Pooh?")
+    //     .map(|t| t.0.to_owned())
+    //     .unwrap_or_else(|| "Pooh?".to_owned());
+    // println!("{:?}", token);
     serialize_docs();
     // let bin = fs::read("packs/index/index.pack").unwrap();
     // let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
     // let mut query = Query::new(index, "MARY ROBERTS RINEHART".to_string(), "en".to_string());
     // query.evaluate();
+    let mut bt: BTreeSet<String> = BTreeSet::new();
+    let mut btm: BTreeMap<String, String> = BTreeMap::new();
 }

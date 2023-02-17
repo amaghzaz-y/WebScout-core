@@ -21,14 +21,14 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(name: String, body: String, language: String) -> Document {
+    pub fn new(name: String, body: String, language: String, tokenizer: &Tokenizer) -> Document {
         let mut document: Document = Document {
             id: hash(name.as_bytes()),
             lang: language,
             index: HashMap::new(),
             count: 0,
         };
-        let index = document.index(&body);
+        let index = document.index(&body, tokenizer);
         document.transform_map(&index);
         return document;
     }
@@ -39,8 +39,11 @@ impl Document {
             .map(|(pos, word)| (word.to_owned(), pos))
             .into_group_map()
     }
-    pub fn index(&self, mut body: &String) -> HashMap<String, HashSet<usize>> {
-        let tokenizer = Tokenizer::new(&self.lang);
+    pub fn index(
+        &self,
+        mut body: &String,
+        tokenizer: &Tokenizer,
+    ) -> HashMap<String, HashSet<usize>> {
         let s = body
             .split_whitespace()
             .enumerate()
@@ -48,8 +51,8 @@ impl Document {
             .into_group_map()
             .iter()
             .map(|(word, pos)| {
-                let token = tokenizer.auto_tokenize(word)[0]
-                    .as_ref()
+                let token = tokenizer
+                    .auto_tokenize(word)
                     .map(|t| t.0.to_owned())
                     .unwrap_or_else(|| word.to_owned());
                 (token, pos.to_owned())
@@ -60,13 +63,13 @@ impl Document {
     pub fn tokenize(
         &self,
         mut map: &HashMap<String, Vec<usize>>,
+        tokenizer: &Tokenizer,
     ) -> HashMap<String, HashSet<usize>> {
-        let tokenizer = Tokenizer::new(&self.lang);
         let s = map
             .into_iter()
             .map(|(word, pos)| {
-                let token = tokenizer.auto_tokenize(word)[0]
-                    .as_ref()
+                let token = tokenizer
+                    .auto_tokenize(word)
                     .map(|t| t.0.to_owned())
                     .unwrap_or_else(|| word.to_owned());
                 (token, pos.clone())

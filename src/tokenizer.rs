@@ -6,17 +6,17 @@ use std::{
     hash::Hash,
 };
 
-use crate::document::Document;
+use crate::{document::Document, pairset::PairSet};
 #[derive(Serialize, Deserialize)]
 pub struct Tokenizer {
     pub lang: String,
-    pub tokens: HashSet<String>,
+    pub tokens: PairSet,
 }
 impl Tokenizer {
     pub fn new(lang: &str) -> Tokenizer {
         Tokenizer {
             lang: lang.to_owned(),
-            tokens: HashSet::new(),
+            tokens: PairSet::new(),
         }
     }
     pub fn transform_token(&self, word: &String) -> String {
@@ -27,13 +27,11 @@ impl Tokenizer {
         }
         return lemma;
     }
-    pub fn filter(&self, prefix_suffix: &HashSet<(String, String)>) -> HashSet<String> {
+    pub fn filter(&self, prefix_suffix: (&String, &String)) -> HashSet<String> {
         let mut tokens: HashSet<String> = HashSet::new();
         for token in &self.tokens {
-            for (pref, suff) in prefix_suffix.iter() {
-                if token.starts_with(pref) || token.ends_with(suff) {
-                    tokens.insert(token.to_owned());
-                }
+            if token.starts_with(prefix_suffix.0) || token.ends_with(prefix_suffix.1) {
+                tokens.insert(token.to_owned());
             }
         }
         return tokens;
@@ -47,40 +45,26 @@ impl Tokenizer {
     }
     pub fn get_prefix_suffix(
         &self,
-        words: &HashSet<String>,
+        token: &mut String,
         mut limit: (usize, usize),
-    ) -> HashSet<(String, String)> {
-        words
-            .iter()
-            .map(|token| {
-                if limit.0 > token.len() {
-                    limit.0 = token.len();
-                }
-                if limit.1 > token.len() {
-                    limit.1 = token.len();
-                }
-                (
-                    token.to_owned().split_at(limit.0).0.to_string(),
-                    token
-                        .to_owned()
-                        .split_at(token.len() - limit.1)
-                        .1
-                        .to_string(),
-                )
-            })
-            .collect()
+    ) -> (String, String) {
+        if limit.0 > token.len() {
+            limit.0 = token.len();
+        }
+        if limit.1 > token.len() {
+            limit.1 = token.len();
+        }
+        token.make_ascii_lowercase();
+        (
+            token.split_at(limit.0).0.to_string(),
+            token.split_at(token.len() - limit.1).1.to_string(),
+        )
     }
-    pub fn auto_tokenize(&self, text: &str) -> Vec<Option<(String, f64)>> {
-        let words: HashSet<String> = text
-            .split_whitespace()
-            .map(|token| token.to_lowercase())
-            .collect();
-        let prefix_suff = self.get_prefix_suffix(&words, (3, 3));
-        let filtred = self.filter(&prefix_suff);
-        words
-            .iter()
-            .map(|token| self.eval(token, &filtred))
-            .collect()
+    pub fn auto_tokenize(&self, mut word: &str) -> Option<(String, f64)> {
+        let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
+        let prefix_suff = self.get_prefix_suffix(&mut token, (3, 3));
+        // let filtred = self.filter((&prefix_suff.0, &prefix_suff.1));
+        self.eval(&token, &self.tokens)
     }
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
@@ -90,6 +74,10 @@ impl Tokenizer {
     }
     pub fn to_pack(&self) -> Vec<u8> {
         rmp_serde::encode::to_vec(&self).unwrap()
+    }
+    pub fn from_fs(lang: &String) -> Tokenizer {
+        let bin = fs::read(format!("packs/{}.pack", lang)).unwrap();
+        Tokenizer::from_pack(&bin)
     }
     pub fn from_pack(bin: &[u8]) -> Tokenizer {
         rmp_serde::from_slice(&bin).unwrap()
