@@ -1,7 +1,6 @@
 #![allow(dead_code, unused)]
 pub mod document;
 pub mod index;
-pub mod pairset;
 pub mod query;
 pub mod tokenizer;
 pub mod utils;

@@ -18,9 +18,9 @@ pub fn benchmark_tokenizer(c: &mut Criterion) {
     // group.bench_function("Query", |b| {
     //     b.iter(|| tokenizer.filter(&HashSet::from([("hom".to_owned(), "gir".to_owned())])))
     // });
-    group.bench_function("Auto Tokenize", |b| {
-        b.iter(|| tokenizer.auto_tokenize("eplephant"))
-    });
+    // group.bench_function("Auto Tokenize", |b| {
+    //     b.iter(|| tokenizer.auto_tokenize("eplephant"))
+    // });
     // group.bench_function("contruct en pack", |b| {
     //     b.iter(|| Tokenizer::new("en").construct_tokens(&lemmer));
     // });
@@ -41,16 +41,16 @@ pub fn benchmark_document(c: &mut Criterion) {
     //     Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index_string(&doc);
     // let tokenized =
     //     Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index(&doc);
-    group.bench_function("auto index", |b| {
-        b.iter(|| {
-            Document::new(
-                "Albott".to_string(),
-                doc.to_owned(),
-                "en".to_owned(),
-                &tokenizer,
-            );
-        });
-    });
+    // group.bench_function("auto index", |b| {
+    //     b.iter(|| {
+    //         Document::new(
+    //             "Albott".to_string(),
+    //             doc.to_owned(),
+    //             "en".to_owned(),
+    //             &tokenizer,
+    //         );
+    //     });
+    // });
     // group.bench_function("indexing", |b| {
     //     b.iter(|| {
     //         Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index(&doc);

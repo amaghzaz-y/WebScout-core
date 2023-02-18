@@ -21,17 +21,17 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(name: String, body: String, language: String, tokenizer: &Tokenizer) -> Document {
-        let mut document: Document = Document {
-            id: hash(name.as_bytes()),
-            lang: language,
-            index: HashMap::new(),
-            count: 0,
-        };
-        let index = document.index(&body, tokenizer);
-        document.transform_map(&index);
-        return document;
-    }
+    // pub fn new(name: String, body: String, language: String, tokenizer: &Tokenizer) -> Document {
+    //     let mut document: Document = Document {
+    //         id: hash(name.as_bytes()),
+    //         lang: language,
+    //         index: HashMap::new(),
+    //         count: 0,
+    //     };
+    //     let index = document.index(&body, tokenizer);
+    //     document.transform_map(&index);
+    //     return document;
+    // }
 
     pub fn index_string(&mut self, mut body: &String) -> HashMap<String, Vec<usize>> {
         body.split_whitespace()
@@ -39,44 +39,44 @@ impl Document {
             .map(|(pos, word)| (word.to_owned(), pos))
             .into_group_map()
     }
-    pub fn index(
-        &self,
-        mut body: &String,
-        tokenizer: &Tokenizer,
-    ) -> HashMap<String, HashSet<usize>> {
-        let s = body
-            .split_whitespace()
-            .enumerate()
-            .map(|(pos, word)| (word.to_owned(), pos))
-            .into_group_map()
-            .iter()
-            .map(|(word, pos)| {
-                let token = tokenizer
-                    .auto_tokenize(word)
-                    .map(|t| t.0.to_owned())
-                    .unwrap_or_else(|| word.to_owned());
-                (token, pos.to_owned())
-            })
-            .into_group_map();
-        self.convert_map_ref(&s)
-    }
-    pub fn tokenize(
-        &self,
-        mut map: &HashMap<String, Vec<usize>>,
-        tokenizer: &Tokenizer,
-    ) -> HashMap<String, HashSet<usize>> {
-        let s = map
-            .into_iter()
-            .map(|(word, pos)| {
-                let token = tokenizer
-                    .auto_tokenize(word)
-                    .map(|t| t.0.to_owned())
-                    .unwrap_or_else(|| word.to_owned());
-                (token, pos.clone())
-            })
-            .into_group_map();
-        return self.convert_map(s);
-    }
+    // pub fn index(
+    //     &self,
+    //     mut body: &String,
+    //     tokenizer: &Tokenizer,
+    // ) -> HashMap<String, HashSet<usize>> {
+    //     let s = body
+    //         .split_whitespace()
+    //         .enumerate()
+    //         .map(|(pos, word)| (word.to_owned(), pos))
+    //         .into_group_map()
+    //         .iter()
+    //         .map(|(word, pos)| {
+    //             let token = tokenizer
+    //                 .auto_tokenize(word)
+    //                 .map(|t| t.0.to_owned())
+    //                 .unwrap_or_else(|| word.to_owned());
+    //             (token, pos.to_owned())
+    //         })
+    //         .into_group_map();
+    //     self.convert_map_ref(&s)
+    // }
+    // pub fn tokenize(
+    //     &self,
+    //     mut map: &HashMap<String, Vec<usize>>,
+    //     tokenizer: &Tokenizer,
+    // ) -> HashMap<String, HashSet<usize>> {
+    //     let s = map
+    //         .into_iter()
+    //         .map(|(word, pos)| {
+    //             let token = tokenizer
+    //                 .auto_tokenize(word)
+    //                 .map(|t| t.0.to_owned())
+    //                 .unwrap_or_else(|| word.to_owned());
+    //             (token, pos.clone())
+    //         })
+    //         .into_group_map();
+    //     return self.convert_map(s);
+    // }
     fn convert_map_ref(
         &self,
         input_map: &HashMap<String, Vec<Vec<usize>>>,
