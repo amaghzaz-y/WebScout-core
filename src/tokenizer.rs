@@ -19,19 +19,33 @@ impl Tokenizer {
             tokens: PatriciaSet::new(),
         }
     }
-    pub fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<(String, f64)> {
+    pub fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<String> {
         tokens
             .iter()
             .map(|token| (token.to_owned(), strsim::jaro_winkler(entry, token)))
+            .filter(|(_, score)| score > &0.65)
             .sorted_by(|(a), b| b.1.total_cmp(&a.1))
             .nth(0)
+            .map(|(t, s)| t)
     }
-    // pub fn auto_tokenize(&self, mut word: &str) -> Option<(String, f64)> {
-    //     let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
-    //     let prefix_suff = self.get_prefix_suffix(&mut token, (3, 3));
-    //     // let filtred = self.filter((&prefix_suff.0, &prefix_suff.1));
-    //     self.eval(&token, &self.tokens)
-    // }
+    pub fn auto_tokenize(&self, mut word: &str) -> Option<String> {
+        let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
+        token.make_ascii_lowercase();
+        let prefix: &[u8];
+        if token.len() > 3 {
+            prefix = token.split_at(3).0.as_bytes();
+        } else {
+            prefix = &token.as_bytes();
+        }
+        let filtred = self
+            .tokens
+            .iter_prefix(prefix)
+            .map(|b| String::from_utf8(b))
+            .filter(|s| s.is_ok())
+            .map(|s| s.unwrap());
+        let tokens: HashSet<String> = HashSet::from_iter(filtred);
+        self.eval(&token, &tokens)
+    }
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()

@@ -58,20 +58,12 @@ fn main() {
     // serialize_lemmers();
     let bin = fs::read("packs/en.pack").unwrap();
     let mut tokenizer = Tokenizer::from_pack(&bin);
-    let v = tokenizer
-        .tokens
-        .iter_prefix(b"housefather")
-        .map(|t| String::from_utf8(t))
-        .collect_vec();
-    println!("{:?}", v);
-    // // // let tokens = tokenizer.filter(&["hom"], &[]);
-    // // // let token = tokenizer.eval("homela", &tokens);
-    // let tokens = tokenizer.auto_tokenize("Pooh!");
+    let tokens = tokenizer.auto_tokenize("fuc");
     // let token = tokenizer
     //     .auto_tokenize("Pooh?")
     //     .map(|t| t.0.to_owned())
     //     .unwrap_or_else(|| "Pooh?".to_owned());
-    // println!("{:?}", token);
+    println!("{:?}", tokens);
     // serialize_docs();
     // let bin = fs::read("packs/index/index.pack").unwrap();
     // let index: Index = rmp_serde::decode::from_slice(&bin).unwrap();
