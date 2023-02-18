@@ -11,12 +11,14 @@ use std::{
 pub struct Tokenizer {
     pub lang: String,
     pub tokens: PatriciaSet,
+    pub cache: HashMap<String, String>,
 }
 impl Tokenizer {
     pub fn new(lang: &str) -> Tokenizer {
         Tokenizer {
             lang: lang.to_owned(),
             tokens: PatriciaSet::new(),
+            cache: HashMap::new(),
         }
     }
     pub fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<String> {
@@ -28,23 +30,36 @@ impl Tokenizer {
             .nth(0)
             .map(|(t, s)| t)
     }
-    pub fn auto_tokenize(&self, mut word: &str) -> Option<String> {
+    pub fn auto_tokenize(&mut self, mut word: &str) -> Option<String> {
         let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
         token.make_ascii_lowercase();
-        let prefix: &[u8];
-        if token.len() > 3 {
-            prefix = token.split_at(3).0.as_bytes();
-        } else {
-            prefix = &token.as_bytes();
-        }
-        let filtred = self
-            .tokens
-            .iter_prefix(prefix)
-            .map(|b| String::from_utf8(b))
-            .filter(|s| s.is_ok())
-            .map(|s| s.unwrap());
-        let tokens: HashSet<String> = HashSet::from_iter(filtred);
-        self.eval(&token, &tokens)
+        let result = match self.cache.get(&token) {
+            Some(string) => Some(string.to_owned()),
+            None => {
+                let prefix: &[u8];
+                if token.len() > 4 {
+                    prefix = token
+                        .split_at((token.len() as f32 * 0.6) as usize)
+                        .0
+                        .as_bytes();
+                } else {
+                    prefix = &token.as_bytes();
+                }
+                let filtred = self
+                    .tokens
+                    .iter_prefix(prefix)
+                    .map(|b| String::from_utf8(b))
+                    .filter(|s| s.is_ok())
+                    .map(|s| s.unwrap());
+                let tokens: HashSet<String> = HashSet::from_iter(filtred);
+                let lemma = self.eval(&token, &tokens);
+                if lemma.is_some() {
+                    self.cache.insert(token, lemma.to_owned().unwrap());
+                }
+                lemma
+            }
+        };
+        result
     }
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text

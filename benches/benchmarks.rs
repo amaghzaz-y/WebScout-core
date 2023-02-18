@@ -35,22 +35,22 @@ pub fn benchmark_tokenizer(c: &mut Criterion) {
 pub fn benchmark_document(c: &mut Criterion) {
     let mut group = c.benchmark_group("Document");
     let pack = fs::read("packs/en.pack").unwrap();
-    let tokenizer = Tokenizer::from_pack(&pack);
+    let mut tokenizer = Tokenizer::from_pack(&pack);
     let doc = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     // let map =
     //     Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index_string(&doc);
     // let tokenized =
     //     Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index(&doc);
-    // group.bench_function("auto index", |b| {
-    //     b.iter(|| {
-    //         Document::new(
-    //             "Albott".to_string(),
-    //             doc.to_owned(),
-    //             "en".to_owned(),
-    //             &tokenizer,
-    //         );
-    //     });
-    // });
+    group.bench_function("auto index", |b| {
+        b.iter(|| {
+            Document::new(
+                "Albott".to_string(),
+                doc.to_owned(),
+                "en".to_owned(),
+                &mut tokenizer,
+            );
+        });
+    });
     // group.bench_function("indexing", |b| {
     //     b.iter(|| {
     //         Document::new("Albott".to_string(), doc.to_owned(), "en".to_owned()).index(&doc);

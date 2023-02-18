@@ -2,6 +2,7 @@ use crate::tokenizer::{self, Tokenizer};
 use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
 use itertools::Itertools;
+use patricia_tree::PatriciaMap;
 use serde::{Deserialize, Serialize, __private::doc};
 use std::collections::{HashMap, HashSet};
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
@@ -21,45 +22,56 @@ pub struct Document {
 }
 
 impl Document {
-    // pub fn new(name: String, body: String, language: String, tokenizer: &Tokenizer) -> Document {
-    //     let mut document: Document = Document {
-    //         id: hash(name.as_bytes()),
-    //         lang: language,
-    //         index: HashMap::new(),
-    //         count: 0,
-    //     };
-    //     let index = document.index(&body, tokenizer);
-    //     document.transform_map(&index);
-    //     return document;
-    // }
+    pub fn new(
+        name: String,
+        body: String,
+        language: String,
+        tokenizer: &mut Tokenizer,
+    ) -> Document {
+        let mut document: Document = Document {
+            id: hash(name.as_bytes()),
+            lang: language,
+            index: HashMap::new(),
+            count: 0,
+        };
+        let index = document.index(&body, tokenizer);
+        document.transform_map(&index);
+        return document;
+    }
 
-    pub fn index_string(&mut self, mut body: &String) -> HashMap<String, Vec<usize>> {
-        body.split_whitespace()
+    // pub fn index_string(mut body: &String) -> PatriciaMap<usize> {
+    //     let mut map = PatriciaMap::new();
+    //     let tokens = body
+    //         .to_ascii_lowercase()
+    //         .split_whitespace()
+    //         .enumerate()
+    //         .for_each(|(pos, word)| {
+    //             let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
+    //             map.insert(token, pos);
+    //         });
+    //     return map;
+    // }
+    pub fn index(
+        &self,
+        mut body: &String,
+        tokenizer: &mut Tokenizer,
+    ) -> HashMap<String, HashSet<usize>> {
+        let s = body
+            .split_whitespace()
             .enumerate()
             .map(|(pos, word)| (word.to_owned(), pos))
             .into_group_map()
+            .iter()
+            .map(|(word, pos)| {
+                let token = tokenizer
+                    .auto_tokenize(word)
+                    .map(|t| t)
+                    .unwrap_or_else(|| word.to_owned());
+                (token, pos.to_owned())
+            })
+            .into_group_map();
+        self.convert_map_ref(&s)
     }
-    // pub fn index(
-    //     &self,
-    //     mut body: &String,
-    //     tokenizer: &Tokenizer,
-    // ) -> HashMap<String, HashSet<usize>> {
-    //     let s = body
-    //         .split_whitespace()
-    //         .enumerate()
-    //         .map(|(pos, word)| (word.to_owned(), pos))
-    //         .into_group_map()
-    //         .iter()
-    //         .map(|(word, pos)| {
-    //             let token = tokenizer
-    //                 .auto_tokenize(word)
-    //                 .map(|t| t.0.to_owned())
-    //                 .unwrap_or_else(|| word.to_owned());
-    //             (token, pos.to_owned())
-    //         })
-    //         .into_group_map();
-    //     self.convert_map_ref(&s)
-    // }
     // pub fn tokenize(
     //     &self,
     //     mut map: &HashMap<String, Vec<usize>>,
@@ -125,6 +137,7 @@ impl Document {
             };
             (token.to_owned(), weight)
         });
+        let u = (23 as usize, 34 as usize, 54.32 as usize);
         self.index = HashMap::from_iter(s);
     }
 
