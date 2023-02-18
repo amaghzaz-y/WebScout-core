@@ -57,7 +57,8 @@ fn serialize_lemmers() {
 }
 fn main() {
     // serialize_lemmers();
-    serialize_docs();
-    // let bin = fs::read("packs/en.pack").unwrap();
-    // let mut tokenizer = Tokenizer::from_pack(&bin);
+    // serialize_docs();
+    let bin = fs::read("packs/en.pack").unwrap();
+    let mut tokenizer = Tokenizer::from_pack(&bin);
+    println!("{:?}", tokenizer.auto_tokenize("HELLo+_))"))
 }

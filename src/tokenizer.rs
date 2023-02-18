@@ -1,12 +1,11 @@
 use crate::document::Document;
+use crate::utils::to_lower_alphanumeric;
+use hashbrown::{hash_map::Entry, HashMap, HashSet};
 use itertools::*;
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::{BTreeMap, HashMap, HashSet},
-    fs,
-    hash::Hash,
-};
+use std::borrow::Cow;
+use std::{collections::BTreeMap, fs, hash::Hash};
 #[derive(Serialize, Deserialize)]
 pub struct Tokenizer {
     pub lang: String,
@@ -30,28 +29,25 @@ impl Tokenizer {
             .nth(0)
             .map(|(t, s)| t)
     }
-    pub fn auto_tokenize(&mut self, mut word: &str) -> Option<String> {
-        let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
-        token.make_ascii_lowercase();
+    pub fn auto_tokenize(&mut self, word: &str) -> Option<String> {
+        let token = to_lower_alphanumeric(word);
         let result = match self.cache.get(&token) {
             Some(string) => Some(string.to_owned()),
             None => {
                 let prefix: &[u8];
                 if token.len() > 4 {
                     prefix = token
-                        .split_at((token.len() as f32 * 0.6) as usize)
-                        .0
-                        .as_bytes();
+                        .as_bytes()
+                        .get(..(token.len() as f32 * 0.6) as usize)
+                        .unwrap_or_else(|| token.as_bytes());
                 } else {
-                    prefix = &token.as_bytes();
+                    prefix = token.as_bytes();
                 }
-                let filtred = self
-                    .tokens
-                    .iter_prefix(prefix)
-                    .map(|b| String::from_utf8(b))
-                    .filter(|s| s.is_ok())
-                    .map(|s| s.unwrap());
-                let tokens: HashSet<String> = HashSet::from_iter(filtred);
+                let tokens: HashSet<String> = HashSet::from_iter(
+                    self.tokens
+                        .iter_prefix(prefix)
+                        .filter_map(|b| String::from_utf8(b.to_vec()).ok()),
+                );
                 let lemma = self.eval(&token, &tokens);
                 if lemma.is_some() {
                     self.cache.insert(token, lemma.to_owned().unwrap());
@@ -61,6 +57,7 @@ impl Tokenizer {
         };
         result
     }
+
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()

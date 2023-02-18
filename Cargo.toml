@@ -19,6 +19,8 @@ itertools = "0.10.5"
 wasm-bindgen="0.2"
 strsim = "0.10.0"
 patricia_tree = { version= "0.5.5", features=["serde"] }
+hashbrown = {version = "0.13.2", features=["serde"]}
+arrayvec = "0.7.2"
 [dependencies.uuid]
 version = "1.3.0"
 features = [
