@@ -19,8 +19,7 @@ itertools = "0.10.5"
 wasm-bindgen="0.2"
 patricia_tree = { version= "0.5.5", features=["serde"] }
 hashbrown = {version = "0.13.2", features=["serde"]}
-arrayvec = "0.7.2"
-fst = {version = "0.4.7", features=["levenshtein"]}
+regex = "1.7.1"
 [dependencies.uuid]
 version = "1.3.0"
 features = [
@@ -29,8 +28,13 @@ features = [
     "macro-diagnostics", 
 ]
 [profile.release]
-opt-level = "s"
-
+opt-level = 3
+debug = 0
+overflow-checks = false
+lto = true
+codegen-units = 8
+[profile.dev]
+opt-level = 3
 [dev-dependencies]
 criterion = {version = "0.4.0", features= ["html_reports"]}
 [[bench]]

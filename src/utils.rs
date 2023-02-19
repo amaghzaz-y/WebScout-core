@@ -19,7 +19,7 @@ pub fn standard_deviation(numbers: &[f32]) -> f32 {
     let mean = mean(numbers);
     let deviation_squared = numbers.iter().map(|&x| (x - mean).powf(2.0)).sum::<f32>();
     let deviation = (deviation_squared / (numbers.len() - 1) as f32).sqrt();
-    if (deviation > 0.0) {
+    if deviation > 0.0 {
         return deviation.floor();
     } else {
         return 0.0;

@@ -1,9 +1,8 @@
-use crate::document::{self, Document, Weight};
+use crate::document::{ Document, Weight};
 extern crate alloc;
 use crate::index::alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
-use crc32fast::hash;
 use hashbrown::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;

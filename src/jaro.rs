@@ -109,7 +109,7 @@ where
         .zip(b.into_iter())
         .take_while(|&(ref a_elem, ref b_elem)| a_elem == b_elem)
         .count();
-	
+
     let jaro_winkler_distance =
         jaro_distance + (0.1 * prefix_length as f32 * (1.0 - jaro_distance));
 

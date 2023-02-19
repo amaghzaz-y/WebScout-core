@@ -23,9 +23,10 @@ fn serialize_docs() {
     for file in dir {
         let path = file.as_ref().unwrap().path().to_owned();
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
-        let body = fs::read_to_string(path).unwrap();
+        let mut body = fs::read_to_string(path).unwrap();
         println!("indexing {:}", name);
-        let doc: Document = Document::new(name.to_owned(), body, "en".to_string(), &mut tokenizer);
+        let doc: Document =
+            Document::new(name.to_owned(), &mut body, "en".to_string(), &mut tokenizer);
         println!("adding document {:}", name);
         idx.add_document(&doc);
         println!("serializing {:}", name);
@@ -59,9 +60,9 @@ fn serialize_lemmers() {
     }
 }
 fn main() {
-    serialize_lemmers();
+    // serialize_lemmers();
     serialize_docs();
-    let bin = fs::read("packs/en.pack").unwrap();
-    let mut tokenizer = Tokenizer::from_fs(&"en");
-    println!("{:?}", tokenizer.auto_tokenize("hello 23"));
+    // let bin = fs::read("packs/en.pack").unwrap();
+    // let mut tokenizer = Tokenizer::from_fs(&"en");
+    // println!("{:?}", tokenizer.auto_tokenize("hello 23"));
 }

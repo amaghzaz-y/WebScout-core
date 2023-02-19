@@ -1,8 +1,5 @@
-use crate::document::Document;
 use crate::jaro;
-use crate::utils::to_lower_alphanumeric;
-use hashbrown::{hash_map::Entry, HashMap, HashSet};
-use itertools::*;
+use hashbrown::{ HashMap, HashSet};
 extern crate alloc;
 use alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
@@ -50,21 +47,19 @@ impl Tokenizer {
     }
 
     pub fn auto_tokenize(&mut self, word: &str) -> Option<String> {
-        let token = to_lower_alphanumeric(word);
-
-        let result = match self.cache.get(&token) {
+        let result = match self.cache.get(word) {
             Some(string) => Some(string.to_owned()),
 
             None => {
                 let prefix: &[u8];
 
-                if token.len() > 4 {
-                    prefix = token
+                if word.len() > 4 {
+                    prefix = word
                         .as_bytes()
-                        .get(..(token.len() as f32 * 0.6) as usize)
-                        .unwrap_or_else(|| token.as_bytes());
+                        .get(..(word.len() as f32 * 0.4) as usize)
+                        .unwrap_or_else(|| word.as_bytes());
                 } else {
-                    prefix = token.as_bytes();
+                    prefix = word.as_bytes();
                 }
 
                 let tokens: HashSet<String> = HashSet::from_iter(
@@ -73,12 +68,13 @@ impl Tokenizer {
                         .filter_map(|b| String::from_utf8(b.to_vec()).ok()),
                 );
 
-                let lemma = self.eval(&token, &tokens);
+                let lemma = self.eval(&word, &tokens);
 
                 if lemma.is_some() {
-                    self.cache.insert(token, lemma.to_owned().unwrap());
+                    self.cache
+                        .insert(word.to_string(), lemma.to_owned().unwrap());
                 } else {
-                    self.cache.insert(token.to_owned(), token);
+                    self.cache.insert(word.to_owned(), word.to_string());
                 }
                 lemma
             }

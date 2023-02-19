@@ -1,4 +1,3 @@
-#![allow(dead_code, unused)]
 pub mod document;
 pub mod index;
 pub mod jaro;
