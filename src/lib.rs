@@ -1,3 +1,5 @@
+#![no_std]
+extern crate alloc;
 pub mod document;
 pub mod index;
 pub mod jaro;

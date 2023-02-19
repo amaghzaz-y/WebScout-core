@@ -1,6 +1,5 @@
-use crate::document::{ Document, Weight};
-extern crate alloc;
-use crate::index::alloc::borrow::ToOwned;
+use crate::document::{Document, Weight};
+use alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use hashbrown::{HashMap, HashSet};
@@ -40,17 +39,14 @@ impl Index {
     }
 
     fn from(bin: &Vec<u8>) -> Index {
-        let index: Index = rmp_serde::decode::from_slice(bin).unwrap();
-        return index;
+        rmp_serde::decode::from_slice(bin).unwrap()
     }
 
     pub fn serialize(&self) -> Vec<u8> {
-        let bin = rmp_serde::encode::to_vec(self).unwrap();
-        return bin;
+        rmp_serde::encode::to_vec(self).unwrap()
     }
 
     pub fn to_json(&self) -> String {
-        let json = serde_json::to_string_pretty(self).unwrap();
-        return json;
+        serde_json::to_string_pretty(self).unwrap()
     }
 }

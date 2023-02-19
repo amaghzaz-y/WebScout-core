@@ -1,7 +1,6 @@
 #![allow(dead_code, unused)]
 use flate2::{write::GzEncoder, Compression};
 use itertools::Itertools;
-use serde::__private::doc;
 use std::{
     collections::{BTreeMap, BTreeSet, Bound, HashSet},
     fs,
@@ -64,5 +63,5 @@ fn main() {
     serialize_docs();
     // let bin = fs::read("packs/en.pack").unwrap();
     // let mut tokenizer = Tokenizer::from_fs(&"en");
-    // println!("{:?}", tokenizer.auto_tokenize("hello 23"));
+    // println!("{:?}", tokenizer.tokens.contains("hom"));
 }

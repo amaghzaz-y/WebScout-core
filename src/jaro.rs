@@ -1,3 +1,4 @@
+use alloc::vec::Vec;
 use core::cmp::{max, min};
 use core::fmt;
 use core::fmt::{Display, Formatter};

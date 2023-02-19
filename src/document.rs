@@ -1,7 +1,6 @@
 use crate::tokenizer::Tokenizer;
 use crate::utils::{mean, standard_deviation};
 use crc32fast::hash;
-
 use serde::{Deserialize, Serialize};
 extern crate alloc;
 use alloc::borrow::ToOwned;
@@ -14,8 +13,8 @@ use regex::Regex;
 
 pub struct Weight {
     pub freq: u32,
-    pub mean: f32,
-    pub devi: f32,
+    pub mean: u32,
+    pub devi: u32,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
@@ -38,8 +37,8 @@ impl Document {
         let mut document: Document = Document {
             id: hash(name.as_bytes()),
             lang: language,
-            index: HashMap::new(),
-            data: HashMap::new(),
+            index: HashMap::default(),
+            data: HashMap::default(),
             count: 0,
         };
 
@@ -53,7 +52,7 @@ impl Document {
         re.split(&text.to_ascii_lowercase())
             .map(|s| {
                 count += 1;
-                (tokenizer.auto_tokenize(s).unwrap_or(s.to_owned()), count)
+                (tokenizer.tokenize(s).unwrap_or(s.to_owned()), count)
             })
             .for_each(|(k, v)| self.add_entry(k, v));
         self.count = count;
@@ -61,13 +60,13 @@ impl Document {
     fn add_entry(&mut self, k: String, v: u32) {
         self.data.entry(k).or_default().insert(v);
     }
-    pub fn transform_data(&mut self) {
+    fn transform_data(&mut self) {
         let s = self.data.iter().map(|(token, pos)| {
             let pos_vec: Vec<f32> = pos.into_iter().map(|x| *x as f32).collect();
             let weight = Weight {
                 freq: pos_vec.len() as u32,
-                mean: mean(&pos_vec),
-                devi: standard_deviation(&pos_vec),
+                mean: mean(&pos_vec) as u32,
+                devi: standard_deviation(&pos_vec) as u32,
             };
             (token.to_owned(), weight)
         });

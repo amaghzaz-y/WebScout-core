@@ -783,6 +783,7 @@ dependencies = [
  "getrandom",
  "hashbrown 0.13.2",
  "itertools",
+ "lazy_static",
  "patricia_tree",
  "regex",
  "rmp-serde",

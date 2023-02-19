@@ -1,5 +1,5 @@
+use alloc::string::String;
 use cfg_if::cfg_if;
-
 cfg_if! {
     if #[cfg(feature = "console_error_panic_hook")] {
         extern crate console_error_panic_hook;
