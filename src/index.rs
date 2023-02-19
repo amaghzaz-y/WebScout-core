@@ -9,7 +9,8 @@ use uuid::Uuid;
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Index {
     pub id: String,
-    pub documents: HashSet<u32>,
+    pub count: u32,
+    pub documents: HashSet<(u32, u32)>,
     pub map: HashMap<String, HashMap<u32, Weight>>,
 }
 
@@ -17,13 +18,16 @@ impl Index {
     pub fn new() -> Index {
         Index {
             id: Uuid::new_v4().to_string(),
+            count: 0,
             documents: HashSet::new(),
             map: HashMap::new(),
         }
     }
 
     pub fn add_document(&mut self, document: &Document) {
-        self.documents.insert(document.id.to_owned());
+        self.count += document.count;
+        self.documents
+            .insert((document.id.to_owned(), document.count));
 
         for (token, positions) in &document.index {
             let doc_name = document.id;

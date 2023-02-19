@@ -24,23 +24,19 @@ fn serialize_docs() {
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
         let mut body = fs::read_to_string(path).unwrap();
         println!("indexing {:}", name);
-        let doc: Document =
-            Document::new(name.to_owned(), &mut body, "en".to_string(), &mut tokenizer);
-        println!("adding document {:}", name);
+        let doc: Document = Document::new(&name, &mut body, "en", &mut tokenizer);
         idx.add_document(&doc);
-        println!("serializing {:}", name);
-        let content = doc.to_pack();
-        println!("saving {:}", name);
-        fs::write(format!("temp/docs/{}.pack", name), content);
-        fs::write(format!("temp/docs/{}.json", name), doc.to_json());
+        // let content = doc.to_pack();
+        // fs::write(format!("temp/docs/{}.pack", name), content);
+        // fs::write(format!("temp/docs/{}.json", name), doc.to_json());
     }
-    println!("saving index");
-    let mut cmp = GzEncoder::new(Vec::new(), Compression::default());
-    cmp.write_all(&idx.serialize());
-    let bin = cmp.finish().unwrap();
-    fs::write("temp/index/index.f2", bin);
-    fs::write("temp/index/index.pack", idx.serialize());
-    fs::write("temp/index/index.json", idx.to_json());
+    // println!("saving index");
+    // let mut cmp = GzEncoder::new(Vec::new(), Compression::default());
+    // cmp.write_all(&idx.serialize());
+    // let bin = cmp.finish().unwrap();
+    // fs::write("temp/index/index.f2", bin);
+    // fs::write("temp/index/index.pack", idx.serialize());
+    // fs::write("temp/index/index.json", idx.to_json());
 }
 
 fn serialize_lemmers() {
@@ -49,7 +45,6 @@ fn serialize_lemmers() {
         let path = file.as_ref().unwrap().path().to_owned();
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
         let body = fs::read_to_string(path).unwrap();
-        println!("construct_tokens: {:}", name);
         let mut tokenizer = Tokenizer::new(&name);
         tokenizer.construct_tokens(&body);
         let json = tokenizer.to_json();
@@ -60,7 +55,11 @@ fn serialize_lemmers() {
 }
 fn main() {
     // serialize_lemmers();
-    serialize_docs();
+    // serialize_docs();
+    let bin = fs::read("packs/en.pack").unwrap();
+    let mut tokenizer = Tokenizer::from_pack(&bin);
+    let mut book = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
+    let doc = Document::new("alcott", &mut book, "en", &mut tokenizer);
     // let bin = fs::read("packs/en.pack").unwrap();
     // let mut tokenizer = Tokenizer::from_fs(&"en");
     // println!("{:?}", tokenizer.tokens.contains("hom"));

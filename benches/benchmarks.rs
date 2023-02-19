@@ -21,12 +21,7 @@ pub fn benchmark_document(c: &mut Criterion) {
     let mut doc = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     c.bench_function("Document Indexing", |b| {
         b.iter(|| {
-            Document::new(
-                "Albott".to_string(),
-                &mut doc,
-                "en".to_owned(),
-                &mut tokenizer,
-            );
+            Document::new("Albott", &mut doc, "en", &mut tokenizer);
         });
     });
 }

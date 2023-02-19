@@ -28,15 +28,10 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(
-        name: String,
-        body: &mut str,
-        language: String,
-        tokenizer: &mut Tokenizer,
-    ) -> Document {
+    pub fn new(name: &str, body: &mut str, language: &str, tokenizer: &mut Tokenizer) -> Document {
         let mut document: Document = Document {
             id: hash(name.as_bytes()),
-            lang: language,
+            lang: language.to_owned(),
             index: HashMap::default(),
             data: HashMap::default(),
             count: 0,

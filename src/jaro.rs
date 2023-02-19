@@ -7,6 +7,7 @@ use core::str::Chars;
 pub enum StrSimError {
     DifferentLengthArgs,
 }
+
 impl Display for StrSimError {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), fmt::Error> {
         let text = match self {
@@ -16,6 +17,7 @@ impl Display for StrSimError {
         write!(fmt, "{}", text)
     }
 }
+
 pub fn generic_jaro<'a, 'b, Iter1, Iter2, Elem1, Elem2>(a: &'a Iter1, b: &'b Iter2) -> f32
 where
     &'a Iter1: IntoIterator<Item = Elem1>,
