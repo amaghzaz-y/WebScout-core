@@ -56,9 +56,9 @@ fn serialize_lemmers() {
     }
 }
 fn main() {
-    // serialize_lemmers();
-    // serialize_docs();
+    serialize_lemmers();
+    serialize_docs();
     let bin = fs::read("packs/en.pack").unwrap();
-    let mut tokenizer = Tokenizer::from_pack(&bin);
-    println!("{:?}", tokenizer.auto_tokenize("HELLo+_))"))
+    let mut tokenizer = Tokenizer::from_fs(&"en");
+    println!("{:?}", tokenizer.auto_tokenize("hello 23"));
 }

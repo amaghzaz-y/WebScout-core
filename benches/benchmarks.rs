@@ -70,7 +70,7 @@ pub fn benchmark_document(c: &mut Criterion) {
 }
 criterion_group! {
   name = benches;
-  config = Criterion::default().measurement_time(Duration::from_secs(12));
+  config = Criterion::default().measurement_time(Duration::from_secs(5));
   targets = benchmark_document
 }
 

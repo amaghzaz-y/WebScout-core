@@ -1,15 +1,20 @@
 use crate::document::Document;
+use crate::jaro;
 use crate::utils::to_lower_alphanumeric;
 use hashbrown::{hash_map::Entry, HashMap, HashSet};
 use itertools::*;
+extern crate alloc;
+use alloc::borrow::ToOwned;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::{collections::BTreeMap, fs, hash::Hash};
+use std::fs;
 #[derive(Serialize, Deserialize)]
 pub struct Tokenizer {
     pub lang: String,
     pub tokens: PatriciaSet,
+    #[serde(skip)]
     pub cache: HashMap<String, String>,
 }
 impl Tokenizer {
@@ -20,14 +25,24 @@ impl Tokenizer {
             cache: HashMap::new(),
         }
     }
+
     pub fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<String> {
-        tokens
-            .iter()
-            .map(|token| (token.to_owned(), strsim::jaro_winkler(entry, token)))
-            .filter(|(_, score)| score > &0.65)
-            .sorted_by(|(a), b| b.1.total_cmp(&a.1))
-            .nth(0)
-            .map(|(t, s)| t)
+        let mut best_score: f32 = 0.0;
+        let mut best_token: Option<String> = None;
+        for token in tokens.iter() {
+            let score = jaro::jaro(entry, token) as f32;
+            if score > 0.65 && score > best_score {
+                best_score = score;
+                best_token = Some(token.to_owned());
+            }
+        }
+        best_token
+    }
+    fn cache_check(&self, value: &str) -> Option<&String> {
+        self.cache.get(value).map(|token| token)
+    }
+    fn add_to_cache(&mut self, k: &str, v: &str) {
+        self.cache.insert(k.to_string(), v.to_string());
     }
     pub fn auto_tokenize(&mut self, word: &str) -> Option<String> {
         let token = to_lower_alphanumeric(word);
@@ -51,6 +66,8 @@ impl Tokenizer {
                 let lemma = self.eval(&token, &tokens);
                 if lemma.is_some() {
                     self.cache.insert(token, lemma.to_owned().unwrap());
+                } else {
+                    self.cache.insert(token.to_owned(), token);
                 }
                 lemma
             }
@@ -68,7 +85,7 @@ impl Tokenizer {
     pub fn to_pack(&self) -> Vec<u8> {
         rmp_serde::encode::to_vec(&self).unwrap()
     }
-    pub fn from_fs(lang: &String) -> Tokenizer {
+    pub fn from_fs(lang: &str) -> Tokenizer {
         let bin = fs::read(format!("packs/{}.pack", lang)).unwrap();
         Tokenizer::from_pack(&bin)
     }

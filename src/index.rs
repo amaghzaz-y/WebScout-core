@@ -1,13 +1,12 @@
 use crate::document::{self, Document, Weight};
+extern crate alloc;
+use crate::index::alloc::borrow::ToOwned;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 use crc32fast::hash;
-use serde::{Deserialize, Serialize, __private::doc};
-use std::{
-    any::Any,
-    collections::{HashMap, HashSet},
-    hash::Hash,
-};
+use hashbrown::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Index {
     pub id: String,

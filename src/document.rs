@@ -3,8 +3,13 @@ use crate::utils::{self, mean, standard_deviation};
 use crc32fast::hash;
 use itertools::Itertools;
 use patricia_tree::PatriciaMap;
-use serde::{Deserialize, Serialize, __private::doc};
-use std::collections::{HashMap, HashSet};
+use serde::{Deserialize, Serialize};
+extern crate alloc;
+use alloc::borrow::ToOwned;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
+use hashbrown::{HashMap as FastMap, HashSet};
+use std::collections::HashMap;
 #[derive(Serialize, Deserialize, Clone, Copy, Debug)]
 
 pub struct Weight {
@@ -18,7 +23,7 @@ pub struct Document {
     pub id: u32,
     pub lang: String,
     pub count: u32,
-    pub index: HashMap<String, Weight>,
+    pub index: FastMap<String, Weight>,
 }
 
 impl Document {
@@ -31,31 +36,20 @@ impl Document {
         let mut document: Document = Document {
             id: hash(name.as_bytes()),
             lang: language,
-            index: HashMap::new(),
+            index: FastMap::new(),
             count: 0,
         };
+
         let index = document.index(&body, tokenizer);
         document.transform_map(&index);
         return document;
     }
-
-    // pub fn index_string(mut body: &String) -> PatriciaMap<usize> {
-    //     let mut map = PatriciaMap::new();
-    //     let tokens = body
-    //         .to_ascii_lowercase()
-    //         .split_whitespace()
-    //         .enumerate()
-    //         .for_each(|(pos, word)| {
-    //             let mut token: String = word.chars().filter(|c| c.is_alphanumeric()).collect();
-    //             map.insert(token, pos);
-    //         });
-    //     return map;
-    // }
     pub fn index(
-        &self,
+        &mut self,
         mut body: &String,
         tokenizer: &mut Tokenizer,
     ) -> HashMap<String, HashSet<usize>> {
+        let mut count = 0;
         let s = body
             .split_whitespace()
             .enumerate()
@@ -65,30 +59,15 @@ impl Document {
             .map(|(word, pos)| {
                 let token = tokenizer
                     .auto_tokenize(word)
-                    .map(|t| t)
                     .unwrap_or_else(|| word.to_owned());
+                count += 1;
                 (token, pos.to_owned())
             })
             .into_group_map();
+        self.count = count;
         self.convert_map_ref(&s)
     }
-    // pub fn tokenize(
-    //     &self,
-    //     mut map: &HashMap<String, Vec<usize>>,
-    //     tokenizer: &Tokenizer,
-    // ) -> HashMap<String, HashSet<usize>> {
-    //     let s = map
-    //         .into_iter()
-    //         .map(|(word, pos)| {
-    //             let token = tokenizer
-    //                 .auto_tokenize(word)
-    //                 .map(|t| t.0.to_owned())
-    //                 .unwrap_or_else(|| word.to_owned());
-    //             (token, pos.clone())
-    //         })
-    //         .into_group_map();
-    //     return self.convert_map(s);
-    // }
+
     fn convert_map_ref(
         &self,
         input_map: &HashMap<String, Vec<Vec<usize>>>,
@@ -107,25 +86,6 @@ impl Document {
         }
         output_map
     }
-    fn convert_map(
-        &self,
-        input_map: HashMap<String, Vec<Vec<usize>>>,
-    ) -> HashMap<String, HashSet<usize>> {
-        let mut output_map: HashMap<String, HashSet<usize>> = HashMap::new();
-        let mut temp_set = HashSet::new();
-        for (key, value) in input_map {
-            for sub_set in value {
-                temp_set.extend(sub_set);
-            }
-            output_map
-                .entry(key)
-                .or_insert_with(HashSet::new)
-                .extend(&temp_set);
-            temp_set.clear();
-        }
-        output_map
-    }
-
     pub fn transform_map(&mut self, map: &HashMap<String, HashSet<usize>>) {
         let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
         let s = map.iter().map(|(token, pos)| {
@@ -138,7 +98,7 @@ impl Document {
             (token.to_owned(), weight)
         });
         let u = (23 as usize, 34 as usize, 54.32 as usize);
-        self.index = HashMap::from_iter(s);
+        self.index = FastMap::from_iter(s);
     }
 
     pub fn to_pack(&self) -> Vec<u8> {
