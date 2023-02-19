@@ -6,7 +6,6 @@ use core::str::Chars;
 pub enum StrSimError {
     DifferentLengthArgs,
 }
-
 impl Display for StrSimError {
     fn fmt(&self, fmt: &mut Formatter) -> Result<(), fmt::Error> {
         let text = match self {
@@ -16,9 +15,6 @@ impl Display for StrSimError {
         write!(fmt, "{}", text)
     }
 }
-
-/// Calculates the Jaro similarity between two sequences. The returned value
-/// is between 0.0 and 1.0 (higher value means more similar).
 pub fn generic_jaro<'a, 'b, Iter1, Iter2, Elem1, Elem2>(a: &'a Iter1, b: &'b Iter2) -> f32
 where
     &'a Iter1: IntoIterator<Item = Elem1>,
@@ -113,6 +109,7 @@ where
         .zip(b.into_iter())
         .take_while(|&(ref a_elem, ref b_elem)| a_elem == b_elem)
         .count();
+	
     let jaro_winkler_distance =
         jaro_distance + (0.1 * prefix_length as f32 * (1.0 - jaro_distance));
 

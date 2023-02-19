@@ -44,6 +44,7 @@ impl Document {
         document.transform_map(&index);
         return document;
     }
+
     pub fn index(
         &mut self,
         mut body: &String,
@@ -86,6 +87,7 @@ impl Document {
         }
         output_map
     }
+
     pub fn transform_map(&mut self, map: &HashMap<String, HashSet<usize>>) {
         let transform: HashMap<String, (usize, usize, usize)> = HashMap::new();
         let s = map.iter().map(|(token, pos)| {

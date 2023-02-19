@@ -8,11 +8,13 @@ use std::{
     io::{read_to_string, Write},
     path::{Path, PathBuf},
 };
+
 use webscout::{
     document::Document,
     index::Index,
     tokenizer::{self, Tokenizer},
 };
+
 fn serialize_docs() {
     let dir = fs::read_dir("assets/books").unwrap();
     let bin = fs::read("packs/en.pack").unwrap();
@@ -40,6 +42,7 @@ fn serialize_docs() {
     fs::write("temp/index/index.pack", idx.serialize());
     fs::write("temp/index/index.json", idx.to_json());
 }
+
 fn serialize_lemmers() {
     let dir = fs::read_dir("assets/lemmers").unwrap();
     for file in dir {

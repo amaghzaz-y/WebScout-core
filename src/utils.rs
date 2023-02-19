@@ -9,6 +9,7 @@ cfg_if! {
         pub fn set_panic_hook() {}
     }
 }
+
 pub fn mean(numbers: &[f32]) -> f32 {
     let mean = numbers.iter().sum::<f32>() / numbers.len() as f32;
     return mean.floor();
@@ -35,7 +36,9 @@ pub fn to_lower_alphanumeric(s: &str) -> String {
         108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125,
         126, 127,
     ];
+
     let mut result = String::with_capacity(s.len());
+
     for &b in s.as_bytes() {
         if ASCII_LOOKUP[b as usize] > 1 {
             result.push(ASCII_LOOKUP[b as usize] as char);
