@@ -7,7 +7,7 @@ use alloc::vec::Vec;
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tokenizer {
     pub lang: String,
     pub tokens: PatriciaSet,
@@ -81,7 +81,6 @@ impl Tokenizer {
             }
         }
     }
-
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()

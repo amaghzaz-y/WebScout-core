@@ -8,10 +8,10 @@ use uuid::Uuid;
 
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Index {
-    pub id: String,
-    pub count: u32,
-    pub documents: HashSet<(u32, u32)>,
-    pub map: HashMap<String, HashMap<u32, Weight>>,
+    id: String,
+    count: u32,
+    documents: HashSet<(u32, u32)>,
+    map: HashMap<String, HashMap<u32, Weight>>,
 }
 
 impl Index {
@@ -41,7 +41,9 @@ impl Index {
                 .insert(doc_name, stats);
         }
     }
-
+    pub fn get(&self, token: &str) -> Option<&HashMap<u32, Weight>> {
+        self.map.get(token)
+    }
     fn from(bin: &Vec<u8>) -> Index {
         rmp_serde::decode::from_slice(bin).unwrap()
     }
