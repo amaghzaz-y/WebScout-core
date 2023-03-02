@@ -91,7 +91,7 @@ impl Query {
             let freq_ratio = *token_scores.get(doc_id).unwrap_or(&0.0);
             let words_found_ratio = count as f32 / num_tokens;
             let score =
-                (words_found_ratio * 8.0 + freq_ratio * 4.0 + (1.0 / (devi + 1.0) * 2.0)) / 14.0;
+                (words_found_ratio * 7.0 + freq_ratio + ((1.0 / (devi + 1.0)) * 3.0)) / 10.0;
             self.result.push((*doc_id, (score * 100.0).floor()));
         }
     }
@@ -100,5 +100,16 @@ impl Query {
         let filter = self.filter();
         let map = self.transpose(&filter);
         self.score(&map);
+    }
+    pub fn all(&self) -> Vec<(String, f32)> {
+        self.result
+            .iter()
+            .map(|(id, score)| {
+                (
+                    self.index.documents.get(id).unwrap().0.to_owned(),
+                    score.to_owned(),
+                )
+            })
+            .collect()
     }
 }

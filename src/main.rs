@@ -61,15 +61,20 @@ fn mean_score(values: &Vec<u32>) -> f32 {
 }
 fn main() {
     // serialize_lemmers();
-    serialize_docs();
+    // serialize_docs();
     let bin = fs::read("packs/en.pack").unwrap();
     let mut tokenizer = Tokenizer::from_pack(&bin);
     let index_bin = fs::read("temp/index/index.pack").unwrap();
     let mut index = Index::from(&index_bin);
-    let mut query = Query::new("Author: Lucy Maud Montgomery", &index, &mut tokenizer);
+    let mut query = Query::new(
+        "1893, under the pseudonym Arthur Lee Putnam.",
+        &index,
+        &mut tokenizer,
+    );
     query.search();
-    query.result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-    println!("{:?}", query.result);
+    let mut res = query.all();
+    res.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    println!("{:?}", res);
     // let mut book = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     // let doc = Document::new("alcott", &mut book, "en", &mut tokenizer);
     // let data: Vec<f32> = vec![351.0, 350.0, 2000.0];
