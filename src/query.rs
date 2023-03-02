@@ -14,7 +14,7 @@ pub struct Query {
     tokenizer: Tokenizer,
     search: String,
     tokens: Vec<String>,
-    pub result: Vec<(u32, f32)>,
+    result: Vec<(u32, f32)>,
 }
 
 impl Query {
@@ -101,15 +101,11 @@ impl Query {
         let map = self.transpose(&filter);
         self.score(&map);
     }
-    pub fn all(&self) -> Vec<(String, f32)> {
+    pub fn all(&mut self) -> Vec<(String, f32)> {
+        self.result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
         self.result
             .iter()
-            .map(|(id, score)| {
-                (
-                    self.index.documents.get(id).unwrap().0.to_owned(),
-                    score.to_owned(),
-                )
-            })
+            .map(|(id, score)| (self.index.get_title(id), score.to_owned()))
             .collect()
     }
 }

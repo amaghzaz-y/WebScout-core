@@ -10,7 +10,7 @@ use uuid::Uuid;
 pub struct Index {
     id: String,
     count: u32,
-    pub documents: HashMap<u32, (String, u32)>,
+    documents: HashMap<u32, (String, u32)>,
     map: HashMap<String, HashMap<u32, Weight>>,
 }
 
@@ -25,14 +25,10 @@ impl Index {
     }
 
     pub fn add_document(&mut self, document: &Document) {
-        self.count += document.count;
-        self.documents.insert(
-            document.id.to_owned(),
-            (document.title.to_owned(), document.count),
-        );
-
-        for (token, positions) in &document.index {
-            let doc_name = document.id;
+        self.documents
+            .insert(document.id(), (document.title(), document.count()));
+        for (token, positions) in &document.index() {
+            let doc_name = document.id();
             let stats: Weight = positions.to_owned();
 
             let map = HashMap::from([(doc_name, stats)]);
@@ -42,6 +38,9 @@ impl Index {
                 .or_insert(map)
                 .insert(doc_name, stats);
         }
+    }
+    pub fn get_title(&self, id: &u32) -> String {
+        self.documents.get(id).unwrap().0.to_owned()
     }
     pub fn get(&self, token: &str) -> Option<&HashMap<u32, Weight>> {
         self.map.get(token)

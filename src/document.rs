@@ -8,47 +8,37 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use hashbrown::{HashMap, HashSet};
 use regex::Regex;
-
-#[derive(Serialize, Deserialize, Clone, Copy, Debug)]
-
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
+#[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub struct Weight {
     pub freq: u32,
     pub mean: u32,
 }
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Debug, Clone)]
-
 pub struct Document {
-    pub id: u32,
-    pub title: String,
-    pub lang: String,
-    pub count: u32,
-    pub index: HashMap<String, Weight>,
+    id: u32,
+    title: String,
+    count: u32,
+    index: HashMap<String, Weight>,
     #[serde(skip)]
     data: HashMap<String, HashSet<u32>>,
 }
-
 impl Document {
-    pub fn new(
-        name: &str,
-        title: &str,
-        body: &mut str,
-        language: &str,
-        tokenizer: &mut Tokenizer,
-    ) -> Document {
+    pub fn new(title: &str, body: &mut str, tokenizer: &mut Tokenizer) -> Document {
         let mut document: Document = Document {
-            id: hash(name.as_bytes()),
+            id: hash(title.as_bytes()),
             title: title.to_ascii_lowercase(),
-            lang: language.to_owned(),
             index: HashMap::default(),
             data: HashMap::default(),
             count: 0,
         };
-
-        document.index(body, tokenizer);
+        document.index_string(body, tokenizer);
         document.transform_data();
         return document;
     }
-    pub fn index(&mut self, text: &mut str, tokenizer: &mut Tokenizer) {
+    fn index_string(&mut self, text: &mut str, tokenizer: &mut Tokenizer) {
         let re = Regex::new(r#"\W+"#).unwrap();
         let mut count: u32 = 0;
         re.split(&text.to_ascii_lowercase())
@@ -73,17 +63,16 @@ impl Document {
         });
         self.index = HashMap::from_iter(s);
     }
-
-    pub fn to_pack(&self) -> Vec<u8> {
-        rmp_serde::encode::to_vec(self).unwrap()
+    pub fn id(&self) -> u32 {
+        self.id
     }
-
-    pub fn from_pack(&self, bin: &[u8]) -> Document {
-        rmp_serde::decode::from_slice(bin).unwrap()
+    pub fn title(&self) -> String {
+        self.title.to_owned()
     }
-
-    pub fn to_json(&self) -> String {
-        let json = serde_json::to_string_pretty(self).unwrap();
-        return json;
+    pub fn index(&self) -> HashMap<String, Weight> {
+        self.index.to_owned()
+    }
+    pub fn count(&self) -> u32 {
+        self.count
     }
 }

@@ -6,15 +6,15 @@ use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
-
+use wasm_bindgen::prelude::*;
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tokenizer {
-    pub lang: String,
-    pub tokens: PatriciaSet,
+    lang: String,
+    tokens: PatriciaSet,
     #[serde(skip)]
-    pub cache: HashMap<String, String>,
+    cache: HashMap<String, String>,
 }
-
 impl Tokenizer {
     pub fn new(lang: &str) -> Tokenizer {
         Tokenizer {
@@ -24,7 +24,7 @@ impl Tokenizer {
         }
     }
 
-    pub fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<String> {
+    fn eval(&self, entry: &str, tokens: &HashSet<String>) -> Option<String> {
         let mut best_score: f32 = 0.0;
         let mut best_token: Option<String> = None;
         for token in tokens.iter() {
@@ -99,7 +99,6 @@ impl Tokenizer {
     }
 
     pub fn to_json(&self) -> String {
-        let json = serde_json::to_string_pretty(&self).unwrap();
-        return json;
+        serde_json::to_string_pretty(&self).unwrap()
     }
 }

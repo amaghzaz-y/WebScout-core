@@ -25,11 +25,8 @@ fn serialize_docs() {
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
         let mut body = fs::read_to_string(path).unwrap();
         println!("indexing {:}", name);
-        let doc: Document = Document::new(&name, &name, &mut body, "en", &mut tokenizer);
+        let doc: Document = Document::new(&name, &mut body, &mut tokenizer);
         idx.add_document(&doc);
-        let content = doc.to_pack();
-        fs::write(format!("temp/docs/{}.pack", name), content);
-        fs::write(format!("temp/docs/{}.json", name), doc.to_json());
     }
     println!("saving index");
     let mut cmp = GzEncoder::new(Vec::new(), Compression::default());
@@ -73,7 +70,6 @@ fn main() {
     );
     query.search();
     let mut res = query.all();
-    res.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
     println!("{:?}", res);
     // let mut book = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     // let doc = Document::new("alcott", &mut book, "en", &mut tokenizer);
