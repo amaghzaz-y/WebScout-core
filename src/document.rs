@@ -1,5 +1,5 @@
 use crate::tokenizer::Tokenizer;
-use crate::utils::{mean, standard_deviation};
+use crate::utils::mean;
 use crc32fast::hash;
 use serde::{Deserialize, Serialize};
 extern crate alloc;
@@ -13,11 +13,13 @@ use regex::Regex;
 
 pub struct Weight {
     pub freq: u32,
-    pub mean: u32,}
+    pub mean: u32,
+}
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct Document {
     pub id: u32,
+    pub title: String,
     pub lang: String,
     pub count: u32,
     pub index: HashMap<String, Weight>,
@@ -26,9 +28,16 @@ pub struct Document {
 }
 
 impl Document {
-    pub fn new(name: &str, body: &mut str, language: &str, tokenizer: &mut Tokenizer) -> Document {
+    pub fn new(
+        name: &str,
+        title: &str,
+        body: &mut str,
+        language: &str,
+        tokenizer: &mut Tokenizer,
+    ) -> Document {
         let mut document: Document = Document {
             id: hash(name.as_bytes()),
+            title: title.to_ascii_lowercase(),
             lang: language.to_owned(),
             index: HashMap::default(),
             data: HashMap::default(),

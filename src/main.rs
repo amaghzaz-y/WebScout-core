@@ -25,7 +25,7 @@ fn serialize_docs() {
         let name = file.as_ref().unwrap().file_name().into_string().unwrap();
         let mut body = fs::read_to_string(path).unwrap();
         println!("indexing {:}", name);
-        let doc: Document = Document::new(&name, &mut body, "en", &mut tokenizer);
+        let doc: Document = Document::new(&name, &name, &mut body, "en", &mut tokenizer);
         idx.add_document(&doc);
         let content = doc.to_pack();
         fs::write(format!("temp/docs/{}.pack", name), content);
@@ -61,13 +61,15 @@ fn mean_score(values: &Vec<u32>) -> f32 {
 }
 fn main() {
     // serialize_lemmers();
-    // serialize_docs();
+    serialize_docs();
     let bin = fs::read("packs/en.pack").unwrap();
     let mut tokenizer = Tokenizer::from_pack(&bin);
     let index_bin = fs::read("temp/index/index.pack").unwrap();
     let mut index = Index::from(&index_bin);
-    let mut query = Query::new("97217", &index, &mut tokenizer);
+    let mut query = Query::new("Author: Lucy Maud Montgomery", &index, &mut tokenizer);
     query.search();
+    query.result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    println!("{:?}", query.result);
     // let mut book = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     // let doc = Document::new("alcott", &mut book, "en", &mut tokenizer);
     // let data: Vec<f32> = vec![351.0, 350.0, 2000.0];
