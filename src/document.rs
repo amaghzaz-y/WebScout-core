@@ -13,9 +13,7 @@ use regex::Regex;
 
 pub struct Weight {
     pub freq: u32,
-    pub mean: u32,
-    pub devi: u32,
-}
+    pub mean: u32,}
 #[derive(Serialize, Deserialize, Debug, Clone)]
 
 pub struct Document {
@@ -61,7 +59,6 @@ impl Document {
             let weight = Weight {
                 freq: pos_vec.len() as u32,
                 mean: mean(&pos_vec) as u32,
-                devi: standard_deviation(&pos_vec) as u32,
             };
             (token.to_owned(), weight)
         });

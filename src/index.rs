@@ -44,7 +44,7 @@ impl Index {
     pub fn get(&self, token: &str) -> Option<&HashMap<u32, Weight>> {
         self.map.get(token)
     }
-    fn from(bin: &Vec<u8>) -> Index {
+    pub fn from(bin: &Vec<u8>) -> Index {
         rmp_serde::decode::from_slice(bin).unwrap()
     }
 
