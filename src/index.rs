@@ -5,7 +5,9 @@ use alloc::vec::Vec;
 use hashbrown::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use wasm_bindgen::prelude::*;
 
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Default, Debug, Clone)]
 pub struct Index {
     id: String,

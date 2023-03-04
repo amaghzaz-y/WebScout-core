@@ -9,7 +9,6 @@ use alloc::vec::Vec;
 use hashbrown::{HashMap, HashSet};
 use regex::Regex;
 use wasm_bindgen::prelude::*;
-#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub struct Weight {
     pub freq: u32,
