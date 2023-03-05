@@ -30,7 +30,7 @@ features = [
     "macro-diagnostics", 
 ]
 [profile.release]
-opt-level = "s"
+opt-level = 3
 debug = 0
 overflow-checks = false
 lto = true

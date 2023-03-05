@@ -7,6 +7,7 @@ use alloc::vec::Vec;
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
+
 #[wasm_bindgen]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Tokenizer {

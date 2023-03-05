@@ -8,11 +8,15 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use hashbrown::{HashMap, HashSet};
 use regex::Regex;
+use wasm_bindgen::prelude::*;
+
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Clone, Debug, Copy)]
 pub struct Weight {
     pub freq: u32,
     pub mean: u32,
 }
+#[wasm_bindgen]
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Document {
     id: u32,

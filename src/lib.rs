@@ -1,4 +1,4 @@
-#![no_std]
+// #![no_std]
 extern crate alloc;
 pub mod document;
 pub mod index;
@@ -16,6 +16,7 @@ use wasm_bindgen::prelude::*;
 pub struct WebScout {
     index: Index,
     tokenizer: Tokenizer,
+    query: Query,
 }
 #[wasm_bindgen]
 impl WebScout {
@@ -24,16 +25,30 @@ impl WebScout {
         WebScout {
             index: Index::new(),
             tokenizer: Tokenizer::new(&lang),
+            query: Query::default(),
         }
     }
     #[wasm_bindgen]
-    pub fn search(&mut self, search: String) -> JsValue {
+    pub fn setup(&mut self) {
+        self.query.setup(&self.index, &self.tokenizer)
+    }
+    #[wasm_bindgen]
+    pub fn search_all(&mut self, search: String) -> JsValue {
         let mut query = Query::new(&self.index, &self.tokenizer);
         let res = query.search(&search);
         let res = query.all(res.0);
         let json = serde_json::to_string(&res).unwrap();
         JsValue::from_str(&json)
     }
+    #[wasm_bindgen]
+    pub fn search_above_average(&mut self, search: String) -> JsValue {
+        let mut query = Query::new(&self.index, &self.tokenizer);
+        let res = query.search(&search);
+        let res = query.above_average(res.0, res.1);
+        let json = serde_json::to_string(&res).unwrap();
+        JsValue::from_str(&json)
+    }
+    #[wasm_bindgen]
     pub fn tokenize(&mut self, token: String) -> JsValue {
         let value = self.tokenizer.tokenize(&token).unwrap_or_default();
         JsValue::from(value)

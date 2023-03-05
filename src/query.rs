@@ -6,7 +6,9 @@ use alloc::string::String;
 use alloc::vec::Vec;
 use hashbrown::HashMap;
 use regex::Regex;
+use wasm_bindgen::prelude::*;
 
+#[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Query {
     index: Index,
@@ -21,9 +23,20 @@ impl Query {
         };
         return query;
     }
-    fn tokenize_query(&mut self, query: String) -> Vec<String> {
+    pub fn default() -> Query {
+        Query {
+            index: Index::new(),
+            tokenizer: Tokenizer::new("en"),
+        }
+    }
+    pub fn setup(&mut self, index: &Index, tokenizer: &Tokenizer) {
+        self.index = index.to_owned();
+        self.tokenizer = tokenizer.to_owned();
+    }
+    fn tokenize_query(&mut self, mut query: String) -> Vec<String> {
+        query.make_ascii_lowercase();
         let re = Regex::new(r#"\W+"#).unwrap();
-        re.split(&query.to_ascii_lowercase())
+        re.split(&query)
             .map(|s| self.tokenizer.tokenize(s).unwrap_or(s.to_owned()))
             .collect::<Vec<String>>()
     }
@@ -98,9 +111,13 @@ impl Query {
     }
     pub fn search(&mut self, query: &str) -> (HashMap<u32, u8>, u8) {
         let mut tokens = self.tokenize_query(query.to_owned());
+        println!("{:?}", tokens);
         let filter = self.filter(&mut tokens);
-        let map = self.transpose(&filter);
-        self.score(tokens, &map)
+        if filter.len() > 0 {
+            let map = self.transpose(&filter);
+            return self.score(tokens, &map);
+        }
+        return (HashMap::default(), 0);
     }
     pub fn above_average(&self, result: HashMap<u32, u8>, avg: u8) -> Vec<(String, u8)> {
         result
