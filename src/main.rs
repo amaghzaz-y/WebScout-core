@@ -1,5 +1,4 @@
 #![allow(dead_code, unused)]
-use flate2::{write::GzEncoder, Compression};
 use std::{
     collections::{BTreeMap, BTreeSet, Bound, HashSet},
     fs,
@@ -29,9 +28,6 @@ fn serialize_docs() {
         idx.add_document(&doc);
     }
     println!("saving index");
-    let mut cmp = GzEncoder::new(Vec::new(), Compression::default());
-    cmp.write_all(&idx.serialize());
-    let bin = cmp.finish().unwrap();
     fs::write("temp/index/index.f2", bin);
     fs::write("temp/index/index.pack", idx.serialize());
     fs::write("temp/index/index.json", idx.to_json());
@@ -63,14 +59,15 @@ fn main() {
     let mut tokenizer = Tokenizer::from_pack(&bin);
     let index_bin = fs::read("temp/index/index.pack").unwrap();
     let mut index = Index::from(&index_bin);
-    let mut query = Query::new(
-        "1893, under the pseudonym Arthur Lee Putnam.",
-        &index,
-        &mut tokenizer,
+    let mut query = Query::new(&index, &mut tokenizer);
+    let s = query.search(
+        "cookery of the author; for, as Mr. Pope tells us-
+
+    True wit is nature to advantage drest;",
     );
-    query.search();
-    let mut res = query.all();
+    let mut res = query.above_average(s.0, s.1);
     println!("{:?}", res);
+    println!("{:?}", s.1);
     // let mut book = fs::read_to_string("assets/books/Alcott-1.txt").unwrap();
     // let doc = Document::new("alcott", &mut book, "en", &mut tokenizer);
     // let data: Vec<f32> = vec![351.0, 350.0, 2000.0];

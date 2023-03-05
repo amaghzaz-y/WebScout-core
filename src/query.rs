@@ -2,8 +2,7 @@ use crate::document::Weight;
 use crate::utils::standard_deviation;
 use crate::{index::Index, tokenizer::Tokenizer};
 use alloc::borrow::ToOwned;
-use alloc::string::{String, ToString};
-use alloc::vec;
+use alloc::string::String;
 use alloc::vec::Vec;
 use hashbrown::HashMap;
 use regex::Regex;
@@ -12,32 +11,25 @@ use regex::Regex;
 pub struct Query {
     index: Index,
     tokenizer: Tokenizer,
-    search: String,
-    tokens: Vec<String>,
-    result: Vec<(u32, f32)>,
 }
 
 impl Query {
-    pub fn new(search: &str, index: &Index, tokenizer: &mut Tokenizer) -> Query {
+    pub fn new(index: &Index, tokenizer: &Tokenizer) -> Query {
         let query = Query {
-            index: index.clone(),
+            index: index.to_owned(),
             tokenizer: tokenizer.to_owned(),
-            tokens: vec![],
-            search: search.to_string(),
-            result: Vec::new(),
         };
         return query;
     }
-    fn tokenize_query(&mut self) {
+    fn tokenize_query(&mut self, query: String) -> Vec<String> {
         let re = Regex::new(r#"\W+"#).unwrap();
-        self.tokens = re
-            .split(&self.search.to_ascii_lowercase())
+        re.split(&query.to_ascii_lowercase())
             .map(|s| self.tokenizer.tokenize(s).unwrap_or(s.to_owned()))
             .collect::<Vec<String>>()
     }
-    fn filter(&mut self) -> Vec<(String, HashMap<u32, Weight>)> {
-        self.tokens.to_owned().dedup();
-        self.tokens
+    fn filter(&self, tokens: &mut Vec<String>) -> Vec<(String, HashMap<u32, Weight>)> {
+        tokens.dedup();
+        tokens
             .iter()
             .map(|t| (t, self.index.get(t)))
             .filter(|(_, t)| t.is_some())
@@ -59,11 +51,16 @@ impl Query {
         }
         map
     }
-    fn score(&mut self, map: &HashMap<u32, Vec<(String, Weight)>>) {
+    fn score(
+        &self,
+        tokens: Vec<String>,
+        map: &HashMap<u32, Vec<(String, Weight)>>,
+    ) -> (HashMap<u32, u8>, u8) {
         let mut deviations = HashMap::with_capacity(map.len());
         let mut total_freqs: HashMap<String, u32> = HashMap::with_capacity(map.len());
         let mut token_scores = HashMap::with_capacity(map.len());
-
+        let mut scores: u16 = 0;
+        let mut result: HashMap<u32, u8> = HashMap::new();
         for (doc_id, doc) in map {
             let count = doc.len() as u32;
             let means: Vec<f32> = doc
@@ -84,28 +81,38 @@ impl Query {
             token_scores.insert(*doc_id, ratio_sum / count as f32);
         }
 
-        let num_tokens = self.tokens.len() as f32;
+        let num_tokens = tokens.len() as f32;
 
         for (doc_id, _) in map {
             let (devi, count) = *deviations.get(doc_id).unwrap();
             let freq_ratio = *token_scores.get(doc_id).unwrap_or(&0.0);
             let words_found_ratio = count as f32 / num_tokens;
-            let score =
-                (words_found_ratio * 7.0 + freq_ratio + ((1.0 / (devi + 1.0)) * 3.0)) / 10.0;
-            self.result.push((*doc_id, (score * 100.0).floor()));
+            let score = (((words_found_ratio * 6.0 + freq_ratio + ((1.0 / (devi + 1.0)) * 3.0))
+                / 10.0)
+                * 100.0)
+                .floor() as u8;
+            scores += score as u16;
+            result.insert(*doc_id, score);
         }
+        return (result, ((scores / map.len() as u16) as u8));
     }
-    pub fn search(&mut self) {
-        self.tokenize_query();
-        let filter = self.filter();
+    pub fn search(&mut self, query: &str) -> (HashMap<u32, u8>, u8) {
+        let mut tokens = self.tokenize_query(query.to_owned());
+        let filter = self.filter(&mut tokens);
         let map = self.transpose(&filter);
-        self.score(&map);
+        self.score(tokens, &map)
     }
-    pub fn all(&mut self) -> Vec<(String, f32)> {
-        self.result.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
-        self.result
+    pub fn above_average(&self, result: HashMap<u32, u8>, avg: u8) -> Vec<(String, u8)> {
+        result
             .iter()
-            .map(|(id, score)| (self.index.get_title(id), score.to_owned()))
+            .filter(|(_, score)| score >= &&avg)
+            .map(|(id, score)| (self.index.get_title(id), *score))
+            .collect()
+    }
+    pub fn all(&mut self, result: HashMap<u32, u8>) -> Vec<(String, u8)> {
+        result
+            .iter()
+            .map(|(id, score)| (self.index.get_title(id), *score))
             .collect()
     }
 }

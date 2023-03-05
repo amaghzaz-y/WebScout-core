@@ -9,3 +9,4 @@ dist
 Cargo.lock
 temp
 node_modules
+pkg

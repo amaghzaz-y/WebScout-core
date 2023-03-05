@@ -18,7 +18,6 @@ rmp-serde = "1.1.1"
 getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = { version = "0.1.1", optional = true }
 crc32fast = "1.3.2"
-flate2 = "1.0.25"
 wasm-bindgen="0.2"
 patricia_tree = { version= "0.5.5", features=["serde"] }
 hashbrown = {version = "0.13.2", features=["serde"]}
@@ -31,12 +30,10 @@ features = [
     "macro-diagnostics", 
 ]
 [profile.release]
-opt-level = 3
+opt-level = "s"
 debug = 0
 overflow-checks = false
-# lto = true
-[profile.dev]
-opt-level = "s"
+lto = true
 [dev-dependencies]
 criterion = {version = "0.4.0", features= ["html_reports"]}
 [[bench]]

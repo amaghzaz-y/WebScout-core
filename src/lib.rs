@@ -6,8 +6,7 @@ pub mod jaro;
 pub mod query;
 pub mod tokenizer;
 pub mod utils;
-use alloc::{borrow::ToOwned, string::String, vec::Vec};
-use document::Document;
+use alloc::{string::String, vec::Vec};
 use index::Index;
 use query::Query;
 use tokenizer::Tokenizer;
@@ -28,21 +27,10 @@ impl WebScout {
         }
     }
     #[wasm_bindgen]
-    pub fn document(&mut self, title: String, mut body: String) -> Document {
-        Document::new(&title, &mut body, &mut self.tokenizer)
-    }
-    pub fn new_index(&mut self) {
-        self.index = Index::new();
-    }
-    #[wasm_bindgen]
-    pub fn add_document(&mut self, document: &mut Document) {
-        self.index.add_document(document);
-    }
-    #[wasm_bindgen]
-    pub fn search(&mut self, query: String) -> JsValue {
-        let mut query = Query::new(&query, &self.index, &mut self.tokenizer);
-        query.search();
-        let res = query.all();
+    pub fn search(&mut self, search: String) -> JsValue {
+        let mut query = Query::new(&self.index, &self.tokenizer);
+        let res = query.search(&search);
+        let res = query.all(res.0);
         let json = serde_json::to_string(&res).unwrap();
         JsValue::from_str(&json)
     }
@@ -57,9 +45,5 @@ impl WebScout {
     #[wasm_bindgen]
     pub fn deserialize_tokenizer(&mut self, input: Vec<u8>) {
         self.tokenizer = Tokenizer::from_pack(&input);
-    }
-    #[wasm_bindgen]
-    pub fn greet(&self) -> String {
-        "hello".to_owned()
     }
 }
