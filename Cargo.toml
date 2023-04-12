@@ -22,6 +22,7 @@ wasm-bindgen="0.2"
 patricia_tree = { version= "0.5.5", features=["serde"] }
 hashbrown = {version = "0.13.2", features=["serde"]}
 regex = "1.7.1"
+hnsw_rs = "0.1.19"
 [dependencies.uuid]
 version = "1.3.0"
 features = [
@@ -36,6 +37,7 @@ overflow-checks = false
 lto = true
 [dev-dependencies]
 criterion = {version = "0.4.0", features= ["html_reports"]}
+reqwest = "0.11.16"
 [[bench]]
 name = "benchmarks"
 harness = false
