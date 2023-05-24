@@ -22,7 +22,7 @@ wasm-bindgen="0.2"
 patricia_tree = { version= "0.5.5", features=["serde"] }
 hashbrown = {version = "0.13.2", features=["serde"]}
 regex = "1.7.1"
-hnsw_rs = "0.1.19"
+
 [dependencies.uuid]
 version = "1.3.0"
 features = [
@@ -30,6 +30,7 @@ features = [
     "fast-rng",          
     "macro-diagnostics", 
 ]
+
 [profile.release]
 opt-level = 3
 debug = 0

@@ -41,12 +41,15 @@ impl Index {
                 .insert(doc_name, stats);
         }
     }
+
     pub fn get_title(&self, id: &u32) -> String {
         self.documents.get(id).unwrap().0.to_owned()
     }
+
     pub fn get(&self, token: &str) -> Option<&HashMap<u32, Weight>> {
         self.map.get(token)
     }
+
     pub fn from(bin: &Vec<u8>) -> Index {
         rmp_serde::decode::from_slice(bin).unwrap()
     }

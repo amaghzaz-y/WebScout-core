@@ -32,6 +32,7 @@ impl WebScout {
     pub fn setup(&mut self) {
         self.query.setup(&self.index, &self.tokenizer)
     }
+
     #[wasm_bindgen]
     pub fn search_all(&mut self, search: String) -> JsValue {
         let mut query = Query::new(&self.index, &self.tokenizer);
@@ -40,6 +41,7 @@ impl WebScout {
         let json = serde_json::to_string(&res).unwrap();
         JsValue::from_str(&json)
     }
+
     #[wasm_bindgen]
     pub fn search_above_average(&mut self, search: String) -> JsValue {
         let mut query = Query::new(&self.index, &self.tokenizer);
@@ -48,15 +50,18 @@ impl WebScout {
         let json = serde_json::to_string(&res).unwrap();
         JsValue::from_str(&json)
     }
+
     #[wasm_bindgen]
     pub fn tokenize(&mut self, token: String) -> JsValue {
         let value = self.tokenizer.tokenize(&token).unwrap_or_default();
         JsValue::from(value)
     }
+
     #[wasm_bindgen]
     pub fn deserialize_index(&mut self, input: Vec<u8>) {
         self.index = rmp_serde::decode::from_slice(&input).unwrap();
     }
+
     #[wasm_bindgen]
     pub fn deserialize_tokenizer(&mut self, input: Vec<u8>) {
         self.tokenizer = Tokenizer::from_pack(&input);

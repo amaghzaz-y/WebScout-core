@@ -23,16 +23,19 @@ impl Query {
         };
         return query;
     }
+
     pub fn default() -> Query {
         Query {
             index: Index::new(),
             tokenizer: Tokenizer::new("en"),
         }
     }
+
     pub fn setup(&mut self, index: &Index, tokenizer: &Tokenizer) {
         self.index = index.to_owned();
         self.tokenizer = tokenizer.to_owned();
     }
+
     fn tokenize_query(&mut self, mut query: String) -> Vec<String> {
         query.make_ascii_lowercase();
         let re = Regex::new(r#"\W+"#).unwrap();
@@ -40,6 +43,7 @@ impl Query {
             .map(|s| self.tokenizer.tokenize(s).unwrap_or(s.to_owned()))
             .collect::<Vec<String>>()
     }
+
     fn filter(&self, tokens: &mut Vec<String>) -> Vec<(String, HashMap<u32, Weight>)> {
         tokens.dedup();
         tokens
@@ -64,6 +68,7 @@ impl Query {
         }
         map
     }
+
     fn score(
         &self,
         tokens: Vec<String>,
@@ -109,6 +114,7 @@ impl Query {
         }
         return (result, ((scores / map.len() as u16) as u8));
     }
+
     pub fn search(&mut self, query: &str) -> (HashMap<u32, u8>, u8) {
         let mut tokens = self.tokenize_query(query.to_owned());
         println!("{:?}", tokens);
@@ -119,6 +125,7 @@ impl Query {
         }
         return (HashMap::default(), 0);
     }
+
     pub fn above_average(&self, result: HashMap<u32, u8>, avg: u8) -> Vec<(String, u8)> {
         result
             .iter()
@@ -126,6 +133,7 @@ impl Query {
             .map(|(id, score)| (self.index.get_title(id), *score))
             .collect()
     }
+
     pub fn all(&mut self, result: HashMap<u32, u8>) -> Vec<(String, u8)> {
         result
             .iter()

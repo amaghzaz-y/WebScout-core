@@ -1,9 +1,9 @@
-use crate::jaro;
-use hashbrown::{HashMap, HashSet};
 extern crate alloc;
+use crate::jaro;
 use alloc::borrow::ToOwned;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
+use hashbrown::{HashMap, HashSet};
 use patricia_tree::PatriciaSet;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
@@ -16,6 +16,7 @@ pub struct Tokenizer {
     #[serde(skip)]
     cache: HashMap<String, String>,
 }
+
 impl Tokenizer {
     pub fn new(lang: &str) -> Tokenizer {
         Tokenizer {
@@ -52,6 +53,7 @@ impl Tokenizer {
             .filter_map(|b| String::from_utf8(b.to_vec()).ok())
             .next()
     }
+
     fn search(&self, value: &str) -> Option<String> {
         let prefix: &[u8];
         if value.len() > 4 {
@@ -70,6 +72,7 @@ impl Tokenizer {
         }
         self.eval(&value, &tokens)
     }
+
     pub fn tokenize(&mut self, value: &str) -> Option<String> {
         match self.cache_check(value) {
             Some(c) => Some(c),
@@ -82,12 +85,12 @@ impl Tokenizer {
             }
         }
     }
+
     pub fn construct_tokens(&mut self, text: &str) {
         let words = text
             .lines()
             .map(|line| line.split_whitespace().next().unwrap().to_string())
             .map(|token| token);
-
         self.tokens = PatriciaSet::from_iter(words);
     }
 

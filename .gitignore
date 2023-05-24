@@ -10,3 +10,5 @@ Cargo.lock
 temp
 node_modules
 pkg
+Cargo.lock
+package-lock.json
