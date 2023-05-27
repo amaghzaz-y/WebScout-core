@@ -1,7 +1,7 @@
 import { initSync, WebScout } from "../pkg/webscout";
 import wasm from "../pkg/webscout_bg.wasm"
 
-export class WebScoutEngine {
+export default class WebScoutEngine {
 	webscout?: WebScout;
 	constructor(index: Uint8Array, tokenizer: Uint8Array, language: string) {
 		initSync(wasm);

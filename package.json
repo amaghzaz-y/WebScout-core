@@ -1,0 +1,10 @@
+{
+	"name": "webscout-core",
+	"version": "0.0.0",
+	"main": "./ts/webscout.ts",
+	"types": "./ts/webscout.ts",
+	"license": "MIT",
+	"scripts": {
+		"build": "wasm-pack build --target web"
+	}
+}
