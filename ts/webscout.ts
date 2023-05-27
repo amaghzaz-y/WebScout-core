@@ -3,7 +3,7 @@ import wasm from "../pkg/webscout_bg.wasm"
 
 export default class WebScoutEngine {
 	webscout?: WebScout;
-	constructor(index: Uint8Array, tokenizer: Uint8Array, language: string) {
+	constructor(index: Uint8Array | null, tokenizer: Uint8Array, language: string) {
 		initSync(wasm);
 		this.webscout = new WebScout(language);
 		if (index !== null) { this.webscout.deserialize_index(index); }
