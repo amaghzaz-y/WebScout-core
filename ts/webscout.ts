@@ -11,6 +11,9 @@ export class WebScoutEngine {
 		// sets up the query engine, optimizes memory
 		this.webscout.setup()
 	}
+	Index(title: string, body: string) {
+		this.webscout?.index(title, body)
+	}
 	Tokenize(word: string): string | undefined {
 		return this.webscout?.tokenize(word);
 	}
@@ -19,5 +22,8 @@ export class WebScoutEngine {
 	}
 	Search(query: string): any {
 		return JSON.parse(this.webscout?.search_above_average(query));
+	}
+	ExportIndex(): Uint8Array | undefined {
+		return this.webscout?.export_index()
 	}
 }
