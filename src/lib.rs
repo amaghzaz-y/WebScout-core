@@ -34,6 +34,13 @@ impl WebScout {
     }
 
     #[wasm_bindgen]
+    pub fn index(&mut self, title: String, mut body: String) {
+        let doc = document::Document::new(&title, &mut body, &mut self.tokenizer);
+        self.index.add_document(&doc);
+    }
+
+    #[wasm_bindgen]
+    // return a JSON with DocumentName : Score
     pub fn search_all(&mut self, search: String) -> JsValue {
         let mut query = Query::new(&self.index, &self.tokenizer);
         let res = query.search(&search);
@@ -52,9 +59,13 @@ impl WebScout {
     }
 
     #[wasm_bindgen]
-    pub fn tokenize(&mut self, token: String) -> JsValue {
-        let value = self.tokenizer.tokenize(&token).unwrap_or_default();
-        JsValue::from(value)
+    pub fn tokenize(&mut self, token: String) -> String {
+        self.tokenizer.tokenize(&token).unwrap_or_default()
+    }
+
+    #[wasm_bindgen]
+    pub fn export_index(&self) -> Box<[u8]> {
+        self.index.serialize().into()
     }
 
     #[wasm_bindgen]
